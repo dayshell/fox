@@ -8,17 +8,17 @@ import { Plus, Trash2, Star, MessageSquare } from 'lucide-react';
 import { Review } from '@/types';
 
 export default function AdminReviewsPage() {
-  const { reviews, loading } = useReviews();
+  const { reviews, loading, addReview, deleteReview } = useReviews();
   const [showForm, setShowForm] = useState(false);
 
   const handleSave = async (data: Partial<Review>) => {
-    console.log('Saving review:', data);
+    addReview(data as Omit<Review, 'id' | 'createdAt'>);
     setShowForm(false);
   };
 
   const handleDelete = async (id: string) => {
     if (confirm('Удалить этот отзыв?')) {
-      console.log('Deleting review:', id);
+      deleteReview(id);
     }
   };
 

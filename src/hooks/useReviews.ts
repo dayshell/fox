@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Review } from '@/types';
 
-// Demo data for development
 const demoReviews: Review[] = [
   {
     id: '1',
@@ -61,17 +60,68 @@ const demoReviews: Review[] = [
   },
 ];
 
+const STORAGE_KEY = 'fxs_reviews';
+
+function getStoredReviews(): Review[] {
+  if (typeof window === 'undefined') return demoReviews;
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      if (parsed.length > 0) {
+        return parsed.map((r: any) => ({
+          ...r,
+          date: new Date(r.date),
+          createdAt: new Date(r.createdAt),
+        }));
+      }
+    } catch {}
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(demoReviews));
+  return demoReviews;
+}
+
+function saveReviews(reviews: Review[]) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(reviews));
+}
+
 export function useReviews() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setTimeout(() => {
-      setReviews(demoReviews);
-      setLoading(false);
-    }, 500);
+  const refresh = useCallback(() => {
+    setReviews(getStoredReviews());
   }, []);
 
-  return { reviews, loading, error };
+  useEffect(() => {
+    refresh();
+    setLoading(false);
+  }, [refresh]);
+
+  const addReview = useCallback((data: Omit<Review, 'id' | 'createdAt'>) => {
+    const newReview: Review = {
+      ...data,
+      id: Date.now().toString(),
+      createdAt: new Date(),
+    };
+    const updated = [newReview, ...reviews];
+    setReviews(updated);
+    saveReviews(updated);
+    return newReview;
+  }, [reviews]);
+
+  const updateReview = useCallback((id: string, data: Partial<Review>) => {
+    const updated = reviews.map(r => r.id === id ? { ...r, ...data } : r);
+    setReviews(updated);
+    saveReviews(updated);
+  }, [reviews]);
+
+  const deleteReview = useCallback((id: string) => {
+    const updated = reviews.filter(r => r.id !== id);
+    setReviews(updated);
+    saveReviews(updated);
+  }, [reviews]);
+
+  return { reviews, loading, addReview, updateReview, deleteReview, refresh };
 }
