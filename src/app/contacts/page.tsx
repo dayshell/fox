@@ -11,7 +11,7 @@ export default function ContactsPage() {
   const contactInfo = [
     { icon: Mail, label: 'Email', value: t('contacts.info.email'), link: `mailto:${t('contacts.info.email')}` },
     { icon: Phone, label: t('contacts.info.phoneLabel'), value: t('contacts.info.phone'), link: `tel:${t('contacts.info.phone').replace(/[^+\d]/g, '')}` },
-    { icon: Send, label: 'Telegram', value: '@FoxSwap_Exchange', link: 'https://t.me/FoxSwap_Exchange' },
+    { icon: Send, label: 'Telegram', value: '@foxswap_pomosh_bot', link: 'https://t.me/foxswap_pomosh_bot' },
   ];
 
   return (

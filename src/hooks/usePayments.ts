@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PaymentDetails } from '@/types';
 
 const demoPayments: PaymentDetails[] = [
@@ -56,16 +56,66 @@ const demoPayments: PaymentDetails[] = [
   },
 ];
 
+const _k = 'fxs_pd';
+
+function _g(): PaymentDetails[] {
+  if (typeof window === 'undefined') return demoPayments;
+  const d = localStorage.getItem(_k);
+  if (d) {
+    try {
+      const p = JSON.parse(d);
+      return p.map((x: any) => ({
+        ...x,
+        createdAt: new Date(x.createdAt),
+        updatedAt: new Date(x.updatedAt),
+      }));
+    } catch {
+      return demoPayments;
+    }
+  }
+  localStorage.setItem(_k, JSON.stringify(demoPayments));
+  return demoPayments;
+}
+
+function _s(p: PaymentDetails[]) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(_k, JSON.stringify(p));
+}
+
 export function usePayments() {
   const [payments, setPayments] = useState<PaymentDetails[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setTimeout(() => {
-      setPayments(demoPayments);
-      setLoading(false);
-    }, 500);
+  const refresh = useCallback(() => {
+    setPayments(_g());
   }, []);
 
-  return { payments, loading };
+  useEffect(() => {
+    refresh();
+    setLoading(false);
+    const i = setInterval(refresh, 2000);
+    return () => clearInterval(i);
+  }, [refresh]);
+
+  const addPayment = useCallback((data: Omit<PaymentDetails, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const n: PaymentDetails = { ...data, id: Date.now().toString(), createdAt: new Date(), updatedAt: new Date() };
+    const u = [...payments, n];
+    setPayments(u);
+    _s(u);
+    return n;
+  }, [payments]);
+
+  const updatePayment = useCallback((id: string, data: Partial<PaymentDetails>) => {
+    const u = payments.map(p => p.id === id ? { ...p, ...data, updatedAt: new Date() } : p);
+    setPayments(u);
+    _s(u);
+  }, [payments]);
+
+  const deletePayment = useCallback((id: string) => {
+    const u = payments.filter(p => p.id !== id);
+    setPayments(u);
+    _s(u);
+  }, [payments]);
+
+  return { payments, loading, addPayment, updatePayment, deletePayment, refresh };
 }
