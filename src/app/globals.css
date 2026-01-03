@@ -1,0 +1,190 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --bg-dark: #0a0a0f;
+  --bg-card: #12121a;
+  --bg-input: #1a1a24;
+  --orange-primary: #f97316;
+  --orange-light: #fb923c;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: var(--bg-dark);
+  min-height: 100vh;
+}
+
+/* Lava Lamp Background */
+.lava-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: #0a0a0f;
+}
+
+.lava-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  animation: float 20s ease-in-out infinite;
+}
+
+.lava-blob-1 {
+  width: 600px;
+  height: 600px;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #c2410c 100%);
+  top: -200px;
+  left: -100px;
+  animation-delay: 0s;
+}
+
+.lava-blob-2 {
+  width: 500px;
+  height: 500px;
+  background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
+  bottom: -150px;
+  right: -100px;
+  animation-delay: -5s;
+}
+
+.lava-blob-3 {
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(135deg, #fdba74 0%, #fb923c 50%, #f97316 100%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: -10s;
+}
+
+.lava-blob-4 {
+  width: 350px;
+  height: 350px;
+  background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%);
+  top: 30%;
+  right: 10%;
+  animation-delay: -15s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(50px, -80px) scale(1.1);
+  }
+  50% {
+    transform: translate(-30px, 60px) scale(0.9);
+  }
+  75% {
+    transform: translate(80px, 40px) scale(1.05);
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-orange-400 to-orange-600;
+  }
+  
+  .card-dark {
+    @apply bg-[#12121a]/80 backdrop-blur-sm border border-gray-800 rounded-2xl;
+  }
+  
+  .input-dark {
+    @apply bg-[#1a1a24] border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:border-orange-500 focus:outline-none transition-colors;
+  }
+  
+  .btn-primary {
+    @apply bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-xl transition-all;
+  }
+  
+  .btn-outline {
+    @apply border border-orange-500 text-orange-400 hover:bg-orange-500/10 rounded-xl transition-all;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0f;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #f97316;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ea580c;
+}
+
+
+/* Ticker Animation */
+.ticker-lava {
+  background: linear-gradient(90deg, #0a0a0f 0%, #12121a 50%, #0a0a0f 100%);
+  position: relative;
+  border-bottom: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.ticker-lava::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(ellipse 200px 100px at 20% 50%, rgba(249, 115, 22, 0.15) 0%, transparent 70%),
+    radial-gradient(ellipse 150px 80px at 60% 50%, rgba(251, 146, 60, 0.1) 0%, transparent 70%),
+    radial-gradient(ellipse 180px 90px at 85% 50%, rgba(234, 88, 12, 0.12) 0%, transparent 70%);
+  animation: ticker-lava-move 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes ticker-lava-move {
+  0%, 100% {
+    background-position: 0% 50%, 0% 50%, 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%, 50% 50%, -50% 50%;
+  }
+}
+
+.ticker-track {
+  display: flex;
+  animation: ticker-scroll 30s linear infinite;
+}
+
+.ticker-content {
+  display: flex;
+  flex-shrink: 0;
+  min-width: 100vw;
+  justify-content: space-around;
+}
+
+.ticker-item {
+  flex-shrink: 0;
+}
+
+@keyframes ticker-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.ticker-track:hover {
+  animation-play-state: paused;
+}
