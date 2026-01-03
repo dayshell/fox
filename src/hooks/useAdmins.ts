@@ -13,7 +13,7 @@ export interface Admin {
   createdAt: Date;
 }
 
-// Default super admin
+// Default admins (hardcoded for all devices)
 const defaultAdmins: Admin[] = [
   {
     id: '1',
@@ -21,6 +21,14 @@ const defaultAdmins: Admin[] = [
     password: 'admin123',
     name: 'Главный админ',
     role: 'superadmin',
+    createdAt: new Date(),
+  },
+  {
+    id: '2',
+    email: 'support@crypto.com',
+    password: '12345678',
+    name: 'Оператор',
+    role: 'operator',
     createdAt: new Date(),
   },
 ];
@@ -78,6 +86,15 @@ export function useAdmins() {
   }, []);
 
   const login = useCallback((email: string, password: string): Admin | null => {
+    // First check hardcoded admins
+    const hardcodedAdmin = defaultAdmins.find(a => a.email === email && a.password === password);
+    if (hardcodedAdmin) {
+      setCurrentAdmin(hardcodedAdmin);
+      localStorage.setItem(CURRENT_ADMIN_KEY, JSON.stringify(hardcodedAdmin));
+      localStorage.setItem('adminAuth', 'true');
+      return hardcodedAdmin;
+    }
+    // Then check localStorage admins
     const storedAdmins = getStoredAdmins();
     const admin = storedAdmins.find(a => a.email === email && a.password === password);
     if (admin) {
