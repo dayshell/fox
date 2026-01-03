@@ -5,6 +5,12 @@ import { Language } from '@/types';
 import ru from '@/messages/ru.json';
 import en from '@/messages/en.json';
 import uz from '@/messages/uz.json';
+import tg from '@/messages/tg.json';
+import ka from '@/messages/ka.json';
+import de from '@/messages/de.json';
+import fr from '@/messages/fr.json';
+import it from '@/messages/it.json';
+import es from '@/messages/es.json';
 
 type Messages = typeof ru;
 
@@ -16,7 +22,9 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-const messages: Record<Language, Messages> = { ru, en, uz };
+const messages: Record<Language, Messages> = { ru, en, uz, tg, ka, de, fr, it, es };
+
+const validLanguages: Language[] = ['ru', 'en', 'uz', 'tg', 'ka', 'de', 'fr', 'it', 'es'];
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>('ru');
@@ -25,7 +33,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setMounted(true);
     const saved = localStorage.getItem('language') as Language;
-    if (saved && (saved === 'ru' || saved === 'en' || saved === 'uz')) {
+    if (saved && validLanguages.includes(saved)) {
       setLanguageState(saved);
     }
   }, []);

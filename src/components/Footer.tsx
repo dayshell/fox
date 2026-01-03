@@ -98,10 +98,15 @@ export default function Footer() {
                 <Mail className="w-4 h-4 text-orange-400" />
                 support@foxswap.top
               </div>
-              <div className="flex items-center gap-2">
+              <a 
+                href="https://t.me/FoxSwap_Exchange" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:text-orange-400 transition-colors"
+              >
                 <Send className="w-4 h-4 text-orange-400" />
-                @foxswap
-              </div>
+                @FoxSwap_Exchange
+              </a>
             </div>
           </motion.div>
         </div>

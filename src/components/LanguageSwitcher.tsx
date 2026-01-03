@@ -11,6 +11,12 @@ const languages: { code: Language; label: string; flagCode: string }[] = [
   { code: 'ru', label: 'RU', flagCode: 'ru' },
   { code: 'en', label: 'EN', flagCode: 'gb' },
   { code: 'uz', label: 'UZ', flagCode: 'uz' },
+  { code: 'tg', label: 'TJ', flagCode: 'tj' },
+  { code: 'ka', label: 'GE', flagCode: 'ge' },
+  { code: 'de', label: 'DE', flagCode: 'de' },
+  { code: 'fr', label: 'FR', flagCode: 'fr' },
+  { code: 'it', label: 'IT', flagCode: 'it' },
+  { code: 'es', label: 'ES', flagCode: 'es' },
 ];
 
 export default function LanguageSwitcher() {
@@ -39,7 +45,7 @@ export default function LanguageSwitcher() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="absolute top-full right-0 mt-1 bg-dark-card border border-gray-800 rounded-lg overflow-hidden shadow-xl z-50"
+            className="absolute top-full right-0 mt-1 bg-dark-card border border-gray-800 rounded-lg overflow-hidden shadow-xl z-50 max-h-80 overflow-y-auto"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}

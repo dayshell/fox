@@ -24,16 +24,19 @@ export default function HomePage() {
       title: t('home.promo.telegram'),
       desc: t('home.promo.telegramDesc'),
       bgImage: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&q=80',
+      link: 'https://t.me/FoxSwap_Exchange',
     },
     {
       title: t('home.promo.yuan'),
       desc: t('home.promo.yuanDesc'),
       bgImage: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=600&q=80',
+      link: 'https://t.me/FoxSwap_Exchange',
     },
     {
       title: t('home.promo.review'),
       desc: t('home.promo.reviewDesc'),
       bgImage: 'https://images.unsplash.com/photo-1642790106117-e829e14a795f?w=600&q=80',
+      link: 'https://t.me/FoxSwap_otziv',
     },
   ];
 
@@ -44,9 +47,12 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {promoCards.map((card, index) => (
-              <motion.div
+              <motion.a
                 key={index}
-                className="relative h-36 rounded-2xl overflow-hidden cursor-pointer group"
+                href={card.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative h-36 rounded-2xl overflow-hidden cursor-pointer group block"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
@@ -69,7 +75,7 @@ export default function HomePage() {
                     <ArrowRight className="w-5 h-5 text-orange-400" />
                   </div>
                 </div>
-              </motion.div>
+              </motion.a>
             ))}
           </div>
         </div>

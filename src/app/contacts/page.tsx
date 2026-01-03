@@ -9,9 +9,9 @@ export default function ContactsPage() {
   const { t } = useLanguage();
 
   const contactInfo = [
-    { icon: Mail, label: 'Email', value: t('contacts.info.email') },
-    { icon: Phone, label: t('contacts.info.phoneLabel'), value: t('contacts.info.phone') },
-    { icon: Send, label: 'Telegram', value: t('contacts.info.telegram') },
+    { icon: Mail, label: 'Email', value: t('contacts.info.email'), link: `mailto:${t('contacts.info.email')}` },
+    { icon: Phone, label: t('contacts.info.phoneLabel'), value: t('contacts.info.phone'), link: `tel:${t('contacts.info.phone').replace(/[^+\d]/g, '')}` },
+    { icon: Send, label: 'Telegram', value: '@FoxSwap_Exchange', link: 'https://t.me/FoxSwap_Exchange' },
   ];
 
   return (
@@ -40,9 +40,12 @@ export default function ContactsPage() {
             transition={{ delay: 0.2 }}
           >
             {contactInfo.map((item, index) => (
-              <motion.div
+              <motion.a
                 key={item.label}
-                className="card-dark p-6 flex items-center gap-4 hover:border-orange-500/50 transition-all"
+                href={item.link}
+                target={item.link.startsWith('http') ? '_blank' : undefined}
+                rel={item.link.startsWith('http') ? 'noopener noreferrer' : undefined}
+                className="card-dark p-6 flex items-center gap-4 hover:border-orange-500/50 transition-all block"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 + index * 0.1 }}
@@ -54,7 +57,7 @@ export default function ContactsPage() {
                   <p className="text-gray-500 text-sm">{item.label}</p>
                   <p className="text-white font-medium">{item.value}</p>
                 </div>
-              </motion.div>
+              </motion.a>
             ))}
 
             {/* Working Hours */}

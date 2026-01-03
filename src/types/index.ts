@@ -41,7 +41,7 @@ export interface ContactFormData {
   message: string;
 }
 
-export type Language = 'ru' | 'en' | 'uz';
+export type Language = 'ru' | 'en' | 'uz' | 'tg' | 'ka' | 'de' | 'fr' | 'it' | 'es';
 
 export type OrderStatus = 'pending' | 'paid' | 'processing' | 'completed' | 'cancelled';
 
