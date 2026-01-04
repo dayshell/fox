@@ -3,8 +3,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Coin } from '@/types';
 
-// Top cryptocurrencies with network support
-const allCoins: Coin[] = [
+// Markup percentage (your profit margin)
+const MARKUP_PERCENT = 5;
+
+// Apply markup to rates
+function applyMarkup(buyRate: number, sellRate: number) {
+  return {
+    buyRate: buyRate * (1 + MARKUP_PERCENT / 100),  // Client pays more
+    sellRate: sellRate * (1 - MARKUP_PERCENT / 100), // Client receives less
+  };
+}
+
+// Base rates (before markup)
+const baseCoins = [
   // Active coins (shown on main page)
   { id: 'btc', name: 'Bitcoin', symbol: 'BTC', network: 'Bitcoin', logoUrl: 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png', buyRate: 67500, sellRate: 67000, isActive: true, createdAt: new Date(), updatedAt: new Date() },
   { id: 'eth', name: 'Ethereum', symbol: 'ETH', network: 'ERC20', logoUrl: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png', buyRate: 3450, sellRate: 3400, isActive: true, createdAt: new Date(), updatedAt: new Date() },
@@ -67,6 +78,12 @@ const allCoins: Coin[] = [
   { id: 'crv', name: 'Curve DAO', symbol: 'CRV', network: 'ERC20', logoUrl: 'https://assets.coingecko.com/coins/images/12124/small/Curve.png', buyRate: 0.52, sellRate: 0.50, isActive: false, createdAt: new Date(), updatedAt: new Date() },
   { id: 'grt', name: 'The Graph', symbol: 'GRT', network: 'ERC20', logoUrl: 'https://assets.coingecko.com/coins/images/13397/small/Graph_Token.png', buyRate: 0.22, sellRate: 0.21, isActive: false, createdAt: new Date(), updatedAt: new Date() },
 ];
+
+// Apply markup to all coins
+const allCoins: Coin[] = baseCoins.map(coin => {
+  const { buyRate, sellRate } = applyMarkup(coin.buyRate, coin.sellRate);
+  return { ...coin, buyRate, sellRate };
+});
 
 const COINS_KEY = 'foxswap_coins';
 
