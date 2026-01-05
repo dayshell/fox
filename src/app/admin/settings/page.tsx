@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, Loader2, Image as ImageIcon, Type, Search, Send, CheckCircle } from 'lucide-react';
+import { Save, Loader2, Image as ImageIcon, Type, Search, Send, CheckCircle, CreditCard, AlertCircle } from 'lucide-react';
 
 export default function AdminSettingsPage() {
   const [siteName, setSiteName] = useState('FoxSwap');
@@ -13,6 +13,13 @@ export default function AdminSettingsPage() {
   const [telegramBotToken, setTelegramBotToken] = useState('');
   const [telegramChatId, setTelegramChatId] = useState('');
   const [telegramEnabled, setTelegramEnabled] = useState(false);
+  // FoxPays settings
+  const [foxpaysApiUrl, setFoxpaysApiUrl] = useState('');
+  const [foxpaysAccessToken, setFoxpaysAccessToken] = useState('');
+  const [foxpaysEnabled, setFoxpaysEnabled] = useState(false);
+  const [testingFoxpays, setTestingFoxpays] = useState(false);
+  const [foxpaysTestResult, setFoxpaysTestResult] = useState<'success' | 'error' | null>(null);
+  
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [testingTelegram, setTestingTelegram] = useState(false);
@@ -31,6 +38,10 @@ export default function AdminSettingsPage() {
         setTelegramBotToken(settings.telegramBotToken || '');
         setTelegramChatId(settings.telegramChatId || '');
         setTelegramEnabled(settings.telegramEnabled || false);
+        // FoxPays
+        setFoxpaysApiUrl(settings.foxpaysApiUrl || '');
+        setFoxpaysAccessToken(settings.foxpaysAccessToken || '');
+        setFoxpaysEnabled(settings.foxpaysEnabled || false);
       } catch (e) {
         console.error('Failed to parse settings');
       }
@@ -42,7 +53,8 @@ export default function AdminSettingsPage() {
     
     const settings = { 
       siteName, logoUrl, metaTitle, metaDescription, metaKeywords,
-      telegramBotToken, telegramChatId, telegramEnabled
+      telegramBotToken, telegramChatId, telegramEnabled,
+      foxpaysApiUrl, foxpaysAccessToken, foxpaysEnabled
     };
     localStorage.setItem('siteSettings', JSON.stringify(settings));
     
@@ -53,6 +65,33 @@ export default function AdminSettingsPage() {
     setLoading(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const testFoxpaysConnection = async () => {
+    if (!foxpaysApiUrl || !foxpaysAccessToken) {
+      alert('Заполните URL API и Access Token');
+      return;
+    }
+    
+    setTestingFoxpays(true);
+    setFoxpaysTestResult(null);
+    
+    try {
+      const response = await fetch(`${foxpaysApiUrl}/api/currencies`, {
+        headers: {
+          'Accept': 'application/json',
+          'Access-Token': foxpaysAccessToken,
+        },
+      });
+      
+      const data = await response.json();
+      setFoxpaysTestResult(data.success ? 'success' : 'error');
+    } catch (error) {
+      setFoxpaysTestResult('error');
+    }
+    
+    setTestingFoxpays(false);
+    setTimeout(() => setFoxpaysTestResult(null), 3000);
   };
 
   const testTelegramConnection = async () => {
@@ -381,6 +420,117 @@ export default function AdminSettingsPage() {
                   <>
                     <Send className="w-5 h-5" />
                     Тест подключения
+                  </>
+                )}
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* FoxPays Settings */}
+        <motion.div
+          className="card-dark p-6 lg:col-span-2"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+        >
+          <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+            <CreditCard className="w-5 h-5 text-orange-400" />
+            FoxPays - Платежная система
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">API URL</label>
+                <input
+                  type="url"
+                  value={foxpaysApiUrl}
+                  onChange={(e) => setFoxpaysApiUrl(e.target.value)}
+                  className="w-full px-4 py-3 input-dark font-mono text-sm"
+                  placeholder="https://panel.foxpays.top"
+                />
+                <p className="text-gray-600 text-xs mt-2">
+                  Базовый URL API FoxPays
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Access Token</label>
+                <input
+                  type="password"
+                  value={foxpaysAccessToken}
+                  onChange={(e) => setFoxpaysAccessToken(e.target.value)}
+                  className="w-full px-4 py-3 input-dark font-mono text-sm"
+                  placeholder="Ваш Access Token"
+                />
+                <p className="text-gray-600 text-xs mt-2">
+                  Токен доступа из личного кабинета FoxPays
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setFoxpaysEnabled(!foxpaysEnabled)}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    foxpaysEnabled ? 'bg-orange-600' : 'bg-gray-700'
+                  }`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                    foxpaysEnabled ? 'left-7' : 'left-1'
+                  }`} />
+                </button>
+                <span className="text-gray-400 text-sm">
+                  {foxpaysEnabled ? 'FoxPays включен' : 'FoxPays выключен'}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-4 bg-dark-input rounded-xl">
+                <h3 className="text-white font-medium mb-3">Что даёт FoxPays:</h3>
+                <ul className="space-y-2 text-gray-400 text-sm">
+                  <li>• Автоматическое получение реквизитов</li>
+                  <li>• Поддержка разных банков (Сбербанк, Тинькофф и др.)</li>
+                  <li>• QR-коды для оплаты</li>
+                  <li>• Автоматическое отслеживание платежей</li>
+                  <li>• Защита от мошенничества</li>
+                </ul>
+              </div>
+
+              <div className="p-3 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+                <p className="text-orange-400 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  Получите Access Token в личном кабинете FoxPays
+                </p>
+              </div>
+
+              <motion.button
+                onClick={testFoxpaysConnection}
+                disabled={testingFoxpays || !foxpaysApiUrl || !foxpaysAccessToken}
+                className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 transition-colors ${
+                  foxpaysTestResult === 'success' 
+                    ? 'bg-green-600 text-white' 
+                    : foxpaysTestResult === 'error'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-orange-600 hover:bg-orange-500 text-white disabled:bg-gray-700 disabled:text-gray-500'
+                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {testingFoxpays ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : foxpaysTestResult === 'success' ? (
+                  <>
+                    <CheckCircle className="w-5 h-5" />
+                    Подключено!
+                  </>
+                ) : foxpaysTestResult === 'error' ? (
+                  'Ошибка подключения'
+                ) : (
+                  <>
+                    <CreditCard className="w-5 h-5" />
+                    Проверить подключение
                   </>
                 )}
               </motion.button>
