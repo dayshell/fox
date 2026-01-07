@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useOrders } from '@/hooks/useOrders';
 import { useCoins } from '@/hooks/useCoins';
-import { TrendingUp, TrendingDown, DollarSign, BarChart3, Calendar, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, Calendar, ArrowUpRight, ArrowDownRight, Minus, Trophy, Flame } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -257,6 +257,31 @@ export default function FinancePage() {
       .sort((a, b) => b.value - a.value)
       .slice(0, 6);
   }, [orders]);
+
+  // Top 10 popular coins (random data for now, will be replaced with real logic later)
+  const top10Coins = useMemo(() => {
+    const popularCoins = [
+      { symbol: 'BTC', name: 'Bitcoin', icon: '₿', color: '#f7931a' },
+      { symbol: 'ETH', name: 'Ethereum', icon: 'Ξ', color: '#627eea' },
+      { symbol: 'USDT', name: 'Tether', icon: '₮', color: '#26a17b' },
+      { symbol: 'BNB', name: 'BNB', icon: 'B', color: '#f3ba2f' },
+      { symbol: 'SOL', name: 'Solana', icon: 'S', color: '#9945ff' },
+      { symbol: 'XRP', name: 'Ripple', icon: 'X', color: '#23292f' },
+      { symbol: 'USDC', name: 'USD Coin', icon: '$', color: '#2775ca' },
+      { symbol: 'ADA', name: 'Cardano', icon: 'A', color: '#0033ad' },
+      { symbol: 'DOGE', name: 'Dogecoin', icon: 'Ð', color: '#c2a633' },
+      { symbol: 'TRX', name: 'TRON', icon: 'T', color: '#ff0013' },
+    ];
+
+    // Generate random exchange counts and volumes for demo
+    return popularCoins.map((coin, index) => ({
+      ...coin,
+      rank: index + 1,
+      exchanges: Math.floor(Math.random() * 500) + 50, // Random 50-550 exchanges
+      volume: Math.floor(Math.random() * 5000000) + 100000, // Random 100k-5.1M volume
+      change: (Math.random() * 40 - 20).toFixed(1), // Random -20% to +20%
+    })).sort((a, b) => b.exchanges - a.exchanges);
+  }, []);
 
   const chartData = period === 'week' ? weeklyChartData : monthlyChartData;
 
@@ -617,6 +642,100 @@ export default function FinancePage() {
           )}
         </motion.div>
       </div>
+
+      {/* Top 10 Popular Coins */}
+      <motion.div
+        className="bg-dark-card rounded-xl p-6 border border-gray-800"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.75 }}
+      >
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+            <Trophy className="w-5 h-5 text-orange-400" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-white">Топ-10 популярных монет</h3>
+            <p className="text-xs text-gray-500">Самые часто обмениваемые криптовалюты</p>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="text-left text-gray-500 text-sm border-b border-gray-800">
+                <th className="pb-3 font-medium">#</th>
+                <th className="pb-3 font-medium">Монета</th>
+                <th className="pb-3 font-medium text-right">Обменов</th>
+                <th className="pb-3 font-medium text-right">Объём</th>
+                <th className="pb-3 font-medium text-right">Изменение</th>
+              </tr>
+            </thead>
+            <tbody>
+              {top10Coins.map((coin, index) => (
+                <tr 
+                  key={coin.symbol} 
+                  className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors"
+                >
+                  <td className="py-4">
+                    <span className={`
+                      w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
+                      ${index === 0 ? 'bg-yellow-500/20 text-yellow-400' : 
+                        index === 1 ? 'bg-gray-400/20 text-gray-300' : 
+                        index === 2 ? 'bg-orange-600/20 text-orange-400' : 
+                        'bg-gray-800 text-gray-500'}
+                    `}>
+                      {coin.rank}
+                    </span>
+                  </td>
+                  <td className="py-4">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                        style={{ backgroundColor: coin.color }}
+                      >
+                        {coin.icon}
+                      </div>
+                      <div>
+                        <p className="text-white font-medium">{coin.symbol}</p>
+                        <p className="text-gray-500 text-xs">{coin.name}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Flame className="w-4 h-4 text-orange-400" />
+                      <span className="text-white font-medium">{coin.exchanges.toLocaleString('ru-RU')}</span>
+                    </div>
+                  </td>
+                  <td className="py-4 text-right">
+                    <span className="text-gray-300">{formatCurrency(coin.volume)} ₽</span>
+                  </td>
+                  <td className="py-4 text-right">
+                    <span className={`flex items-center justify-end gap-1 ${
+                      parseFloat(coin.change) >= 0 ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                      {parseFloat(coin.change) >= 0 ? (
+                        <ArrowUpRight className="w-4 h-4" />
+                      ) : (
+                        <ArrowDownRight className="w-4 h-4" />
+                      )}
+                      {parseFloat(coin.change) >= 0 ? '+' : ''}{coin.change}%
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-4 p-3 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+          <p className="text-orange-400 text-xs flex items-center gap-2">
+            <Flame className="w-4 h-4" />
+            Данные обновляются на основе завершённых обменов. Сейчас показаны демо-данные.
+          </p>
+        </div>
+      </motion.div>
 
       {/* Summary */}
       <motion.div
