@@ -12,7 +12,8 @@ import fr from '@/messages/fr.json';
 import it from '@/messages/it.json';
 import es from '@/messages/es.json';
 
-type Messages = typeof ru;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Messages = Record<string, any>;
 
 interface LanguageContextType {
   language: Language;
