@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Coins, CreditCard, MessageSquare, LayoutDashboard, LogOut, Settings, ShoppingCart, Volume2, VolumeX, Users, MessageCircle } from 'lucide-react';
+import { Coins, CreditCard, MessageSquare, LayoutDashboard, LogOut, Settings, ShoppingCart, Volume2, VolumeX, Users, MessageCircle, PieChart } from 'lucide-react';
 import { useNotificationSound } from '@/hooks/useNotificationSound';
 import { useAdmins } from '@/hooks/useAdmins';
 import { useChat } from '@/hooks/useChat';
@@ -19,6 +19,7 @@ export default function AdminSidebar() {
   const menuItems: { href: string; icon: any; label: string; roles: string[]; badge?: number }[] = [
     { href: '/admin', icon: LayoutDashboard, label: 'Dashboard', roles: ['superadmin', 'operator'] },
     { href: '/admin/orders', icon: ShoppingCart, label: 'Заказы', roles: ['superadmin', 'operator'] },
+    { href: '/admin/finance', icon: PieChart, label: 'Учёт средств', roles: ['superadmin'] },
     { href: '/admin/chat', icon: MessageCircle, label: 'Чат', roles: ['superadmin', 'operator'], badge: totalUnread },
     { href: '/admin/coins', icon: Coins, label: 'Монеты', roles: ['superadmin'] },
     { href: '/admin/payments', icon: CreditCard, label: 'Реквизиты', roles: ['superadmin'] },

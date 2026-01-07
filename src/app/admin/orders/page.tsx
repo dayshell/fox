@@ -27,6 +27,7 @@ function OrderModal({ order, onClose, onUpdateStatus }: OrderModalProps) {
   const [newStatus, setNewStatus] = useState<OrderStatus>(order.status);
   const [message, setMessage] = useState(order.adminMessage || '');
   const [loading, setLoading] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const handleSave = async () => {
     setLoading(true);
@@ -35,6 +36,21 @@ function OrderModal({ order, onClose, onUpdateStatus }: OrderModalProps) {
     setLoading(false);
     onClose();
   };
+
+  const copyToClipboard = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 1500);
+  };
+
+  // Calculate profit (assuming 3% margin)
+  const profitPercent = 3;
+  const profit = order.amount * (profitPercent / 100);
+
+  // Parse wallet info (may contain email/name)
+  const walletParts = order.customerWallet.split(' | ');
+  const walletAddress = walletParts[0];
+  const cardholderName = walletParts[1] || null;
 
   return (
     <motion.div
@@ -45,37 +61,154 @@ function OrderModal({ order, onClose, onUpdateStatus }: OrderModalProps) {
       onClick={onClose}
     >
       <motion.div
-        className="card-dark p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="card-dark p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white">#{order.orderNumber}</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-white">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-white">Детали сделки</h2>
+            <p className="text-gray-500 text-sm">#{order.orderNumber}</p>
+          </div>
+          <button onClick={onClose} className="text-gray-500 hover:text-white p-2 rounded-lg hover:bg-gray-800">
             <XCircle className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Order Details */}
-        <div className="p-3 bg-dark-input rounded-lg mb-4">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-white">{order.amount} {order.fromCoinSymbol}</span>
-            <ArrowRight className="w-4 h-4 text-orange-500" />
-            <span className="text-white">{order.receiveAmount} {order.toCoinSymbol}</span>
+        {/* Order Info Grid */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          {/* ID сделки */}
+          <div className="p-4 bg-dark-input rounded-xl">
+            <p className="text-gray-500 text-xs mb-1">ID сделки</p>
+            <div className="flex items-center gap-2">
+              <span className="text-white font-mono text-sm">{order.id}</span>
+              <button 
+                onClick={() => copyToClipboard(order.id, 'id')}
+                className="text-gray-500 hover:text-orange-400"
+              >
+                {copiedField === 'id' ? <CheckCircle className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Номер заказа */}
+          <div className="p-4 bg-dark-input rounded-xl">
+            <p className="text-gray-500 text-xs mb-1">Номер заказа</p>
+            <div className="flex items-center gap-2">
+              <span className="text-white font-bold">{order.orderNumber}</span>
+              <button 
+                onClick={() => copyToClipboard(order.orderNumber, 'orderNumber')}
+                className="text-gray-500 hover:text-orange-400"
+              >
+                {copiedField === 'orderNumber' ? <CheckCircle className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Статус */}
+          <div className="p-4 bg-dark-input rounded-xl">
+            <p className="text-gray-500 text-xs mb-1">Статус сделки</p>
+            <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${statusConfig[order.status].bgColor} ${statusConfig[order.status].color}`}>
+              {(() => { const Icon = statusConfig[order.status].icon; return <Icon className="w-4 h-4" />; })()}
+              {statusConfig[order.status].label}
+            </span>
+          </div>
+
+          {/* Время */}
+          <div className="p-4 bg-dark-input rounded-xl">
+            <p className="text-gray-500 text-xs mb-1">Время создания</p>
+            <span className="text-white">
+              {order.createdAt.toLocaleDateString('ru-RU')} в {order.createdAt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+            </span>
           </div>
         </div>
 
-        <div className="p-3 bg-dark-input rounded-lg mb-4">
-          <p className="text-gray-500 text-xs mb-1">Кошелёк клиента</p>
-          <code className="text-white font-mono text-xs break-all">{order.customerWallet}</code>
+        {/* Exchange Details */}
+        <div className="p-4 bg-gradient-to-r from-orange-500/10 to-purple-500/10 border border-orange-500/20 rounded-xl mb-6">
+          <p className="text-gray-400 text-xs mb-3">Детали обмена</p>
+          <div className="flex items-center justify-between">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-white">{order.amount}</p>
+              <p className="text-orange-400 font-medium">{order.fromCoinSymbol}</p>
+              <p className="text-gray-500 text-xs">{order.fromCoinName}</p>
+            </div>
+            <div className="flex flex-col items-center px-4">
+              <ArrowRight className="w-6 h-6 text-orange-500" />
+              <p className="text-gray-500 text-xs mt-1">Курс: {order.rate.toFixed(8)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-white">{order.receiveAmount}</p>
+              <p className="text-purple-400 font-medium">{order.toCoinSymbol}</p>
+              <p className="text-gray-500 text-xs">{order.toCoinName}</p>
+            </div>
+          </div>
         </div>
 
+        {/* Profit Info */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+            <p className="text-gray-500 text-xs mb-1">Прибыль</p>
+            <p className="text-green-400 font-bold text-lg">+{profit.toFixed(2)} {order.fromCoinSymbol}</p>
+          </div>
+          <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+            <p className="text-gray-500 text-xs mb-1">% прибыли</p>
+            <p className="text-blue-400 font-bold text-lg">{profitPercent}%</p>
+          </div>
+        </div>
+
+        {/* Customer Info */}
+        <div className="p-4 bg-dark-input rounded-xl mb-6">
+          <p className="text-gray-500 text-xs mb-3">Данные клиента</p>
+          
+          <div className="space-y-3">
+            {/* Wallet/Card */}
+            <div>
+              <p className="text-gray-500 text-xs mb-1">Кошелёк / Карта</p>
+              <div className="flex items-center gap-2">
+                <code className="text-white font-mono text-sm break-all flex-1">{walletAddress}</code>
+                <button 
+                  onClick={() => copyToClipboard(walletAddress, 'wallet')}
+                  className="text-gray-500 hover:text-orange-400 flex-shrink-0"
+                >
+                  {copiedField === 'wallet' ? <CheckCircle className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Cardholder Name */}
+            {cardholderName && (
+              <div>
+                <p className="text-gray-500 text-xs mb-1">ФИО получателя</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-white">{cardholderName}</span>
+                  <button 
+                    onClick={() => copyToClipboard(cardholderName, 'name')}
+                    className="text-gray-500 hover:text-orange-400"
+                  >
+                    {copiedField === 'name' ? <CheckCircle className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Admin Message if exists */}
+        {order.adminMessage && (
+          <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl mb-6">
+            <p className="text-yellow-500 text-xs mb-1">Сообщение клиенту</p>
+            <p className="text-white">{order.adminMessage}</p>
+          </div>
+        )}
+
         {/* Status Update */}
-        <div className="space-y-3">
+        <div className="border-t border-gray-800 pt-6 space-y-4">
+          <h3 className="text-white font-semibold">Управление заказом</h3>
+          
           <div>
-            <label className="block text-xs text-gray-400 mb-2">Статус</label>
-            <div className="grid grid-cols-3 gap-2">
+            <label className="block text-xs text-gray-400 mb-2">Изменить статус</label>
+            <div className="grid grid-cols-5 gap-2">
               {(Object.keys(statusConfig) as OrderStatus[]).map((status) => {
                 const config = statusConfig[status];
                 return (
@@ -102,21 +235,21 @@ function OrderModal({ order, onClose, onUpdateStatus }: OrderModalProps) {
               onChange={(e) => setMessage(e.target.value)}
               rows={2}
               className="w-full px-3 py-2 input-dark resize-none text-sm"
-              placeholder="Сообщение..."
+              placeholder="Введите сообщение для клиента..."
             />
           </div>
 
-          <div className="flex gap-2 pt-2">
-            <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-700 text-gray-400 text-sm">
+          <div className="flex gap-3 pt-2">
+            <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-700 text-gray-400 hover:bg-gray-800 transition-colors">
               Отмена
             </button>
             <motion.button
               onClick={handleSave}
               disabled={loading}
-              className="flex-1 py-2 btn-primary text-sm"
+              className="flex-1 py-3 btn-primary"
               whileTap={{ scale: 0.98 }}
             >
-              {loading ? <RefreshCw className="w-4 h-4 animate-spin mx-auto" /> : 'Сохранить'}
+              {loading ? <RefreshCw className="w-5 h-5 animate-spin mx-auto" /> : 'Сохранить изменения'}
             </motion.button>
           </div>
         </div>
