@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { FoxPaysClient } from '@/lib/foxpays';
 import { FoxPaysPaymentGateway } from '@/types/foxpays';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 // Cache for payment gateways (5 minutes)
 let gatewaysCache: {
   data: FoxPaysPaymentGateway[] | null;

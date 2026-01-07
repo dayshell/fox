@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { FoxPaysClient } from '@/lib/foxpays';
 import { CreateFoxPaysOrderParams, ExchangeOrder } from '@/types/foxpays';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 function getFoxPaysConfig(request: NextRequest) {
   const apiBaseUrl = request.headers.get('X-FoxPays-URL') || process.env.FOXPAYS_API_URL || '';
   const accessToken = request.headers.get('X-FoxPays-Token') || process.env.FOXPAYS_ACCESS_TOKEN || '';

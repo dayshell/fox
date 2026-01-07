@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 // This route is used to get FoxPays config from client-side localStorage
 // and pass it to server-side API routes via headers
 
