@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, Loader2, Image as ImageIcon, Type, Search, Send, CheckCircle, CreditCard, AlertCircle } from 'lucide-react';
+import { Save, Loader2, Image as ImageIcon, Type, Search, Send, CheckCircle, CreditCard, AlertCircle, Percent, DollarSign, Calendar, Plus, Trash2 } from 'lucide-react';
+
+interface DailyExpense {
+  id: string;
+  amount: number;
+  date: string;
+  comment: string;
+}
 
 export default function AdminSettingsPage() {
   const [siteName, setSiteName] = useState('FoxSwap');
@@ -19,6 +26,14 @@ export default function AdminSettingsPage() {
   const [foxpaysEnabled, setFoxpaysEnabled] = useState(false);
   const [testingFoxpays, setTestingFoxpays] = useState(false);
   const [foxpaysTestResult, setFoxpaysTestResult] = useState<'success' | 'error' | null>(null);
+  
+  // Commission and expenses settings
+  const [buyCommission, setBuyCommission] = useState(2); // % наценка на покупку
+  const [sellCommission, setSellCommission] = useState(2); // % наценка на продажу
+  const [dailyExpenses, setDailyExpenses] = useState(0); // ежедневные расходы
+  const [todayExpenses, setTodayExpenses] = useState<DailyExpense[]>([]); // расходы за сегодня
+  const [newExpenseAmount, setNewExpenseAmount] = useState('');
+  const [newExpenseComment, setNewExpenseComment] = useState('');
   
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -42,8 +57,24 @@ export default function AdminSettingsPage() {
         setFoxpaysApiUrl(settings.foxpaysApiUrl || '');
         setFoxpaysAccessToken(settings.foxpaysAccessToken || '');
         setFoxpaysEnabled(settings.foxpaysEnabled || false);
+        // Commission and expenses
+        setBuyCommission(settings.buyCommission ?? 2);
+        setSellCommission(settings.sellCommission ?? 2);
+        setDailyExpenses(settings.dailyExpenses ?? 0);
       } catch (e) {
         console.error('Failed to parse settings');
+      }
+    }
+    
+    // Load today's expenses
+    const expensesData = localStorage.getItem('dailyExpenses');
+    if (expensesData) {
+      try {
+        const allExpenses: DailyExpense[] = JSON.parse(expensesData);
+        const today = new Date().toISOString().split('T')[0];
+        setTodayExpenses(allExpenses.filter(e => e.date === today));
+      } catch (e) {
+        console.error('Failed to parse expenses');
       }
     }
   }, []);
@@ -54,7 +85,8 @@ export default function AdminSettingsPage() {
     const settings = { 
       siteName, logoUrl, metaTitle, metaDescription, metaKeywords,
       telegramBotToken, telegramChatId, telegramEnabled,
-      foxpaysApiUrl, foxpaysAccessToken, foxpaysEnabled
+      foxpaysApiUrl, foxpaysAccessToken, foxpaysEnabled,
+      buyCommission, sellCommission, dailyExpenses
     };
     localStorage.setItem('siteSettings', JSON.stringify(settings));
     
@@ -65,6 +97,41 @@ export default function AdminSettingsPage() {
     setLoading(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const addTodayExpense = () => {
+    if (!newExpenseAmount || parseFloat(newExpenseAmount) <= 0) return;
+    
+    const today = new Date().toISOString().split('T')[0];
+    const newExpense: DailyExpense = {
+      id: Date.now().toString(),
+      amount: parseFloat(newExpenseAmount),
+      date: today,
+      comment: newExpenseComment || '',
+    };
+    
+    // Load all expenses and add new one
+    const expensesData = localStorage.getItem('dailyExpenses');
+    const allExpenses: DailyExpense[] = expensesData ? JSON.parse(expensesData) : [];
+    allExpenses.push(newExpense);
+    localStorage.setItem('dailyExpenses', JSON.stringify(allExpenses));
+    
+    // Update state
+    setTodayExpenses([...todayExpenses, newExpense]);
+    setNewExpenseAmount('');
+    setNewExpenseComment('');
+  };
+
+  const deleteTodayExpense = (id: string) => {
+    const expensesData = localStorage.getItem('dailyExpenses');
+    const allExpenses: DailyExpense[] = expensesData ? JSON.parse(expensesData) : [];
+    const filtered = allExpenses.filter(e => e.id !== id);
+    localStorage.setItem('dailyExpenses', JSON.stringify(filtered));
+    setTodayExpenses(todayExpenses.filter(e => e.id !== id));
+  };
+
+  const getTodayExpensesTotal = () => {
+    return todayExpenses.reduce((sum, e) => sum + e.amount, 0);
   };
 
   const testFoxpaysConnection = async () => {
@@ -534,6 +601,190 @@ export default function AdminSettingsPage() {
                   </>
                 )}
               </motion.button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Commission Settings */}
+        <motion.div
+          className="card-dark p-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+            <Percent className="w-5 h-5 text-orange-400" />
+            Комиссии сервиса
+          </h2>
+
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Комиссия на покупку (%)</label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="100"
+                value={buyCommission}
+                onChange={(e) => setBuyCommission(parseFloat(e.target.value) || 0)}
+                className="w-full px-4 py-3 input-dark"
+                placeholder="2"
+              />
+              <p className="text-gray-600 text-xs mt-2">
+                Наценка на курс при покупке криптовалюты клиентом
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Комиссия на продажу (%)</label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="100"
+                value={sellCommission}
+                onChange={(e) => setSellCommission(parseFloat(e.target.value) || 0)}
+                className="w-full px-4 py-3 input-dark"
+                placeholder="2"
+              />
+              <p className="text-gray-600 text-xs mt-2">
+                Наценка на курс при продаже криптовалюты клиентом
+              </p>
+            </div>
+
+            <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+              <p className="text-orange-400 text-sm">
+                💡 Пример: при комиссии 2% и курсе BTC 100 000₽, клиент увидит курс 102 000₽ при покупке
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Daily Expenses Settings */}
+        <motion.div
+          className="card-dark p-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+        >
+          <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-orange-400" />
+            Ежедневные расходы
+          </h2>
+
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Расходы за день (₽)</label>
+              <input
+                type="number"
+                step="1"
+                min="0"
+                value={dailyExpenses}
+                onChange={(e) => setDailyExpenses(parseFloat(e.target.value) || 0)}
+                className="w-full px-4 py-3 input-dark"
+                placeholder="0"
+              />
+              <p className="text-gray-600 text-xs mt-2">
+                Сумма операционных расходов за сутки (аренда, зарплаты и т.д.)
+              </p>
+            </div>
+
+            <div className="p-4 bg-dark-input rounded-xl">
+              <p className="text-gray-400 text-sm">
+                Эта сумма будет вычитаться из прибыли при расчёте чистого дохода в разделе "Учёт средств"
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Today's Expenses */}
+        <motion.div
+          className="card-dark p-6 lg:col-span-2"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-orange-400" />
+            Расходы за сегодня
+            {todayExpenses.length > 0 && (
+              <span className="ml-auto text-sm text-gray-400">
+                Итого: <span className="text-orange-400 font-semibold">{getTodayExpensesTotal().toLocaleString('ru-RU')} ₽</span>
+              </span>
+            )}
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Сумма (₽)</label>
+                <input
+                  type="number"
+                  step="1"
+                  min="0"
+                  value={newExpenseAmount}
+                  onChange={(e) => setNewExpenseAmount(e.target.value)}
+                  className="w-full px-4 py-3 input-dark"
+                  placeholder="1000"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Комментарий</label>
+                <input
+                  type="text"
+                  value={newExpenseComment}
+                  onChange={(e) => setNewExpenseComment(e.target.value)}
+                  className="w-full px-4 py-3 input-dark"
+                  placeholder="На что потрачено..."
+                />
+              </div>
+
+              <motion.button
+                onClick={addTodayExpense}
+                disabled={!newExpenseAmount || parseFloat(newExpenseAmount) <= 0}
+                className="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl flex items-center justify-center gap-2 disabled:bg-gray-700 disabled:text-gray-500"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Plus className="w-5 h-5" />
+                Добавить расход
+              </motion.button>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm text-gray-400 mb-2">Расходы за {new Date().toLocaleDateString('ru-RU')}:</p>
+              
+              {todayExpenses.length === 0 ? (
+                <div className="p-4 bg-dark-input rounded-xl text-center text-gray-500">
+                  Нет расходов за сегодня
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {todayExpenses.map((expense) => (
+                    <div key={expense.id} className="p-3 bg-dark-input rounded-xl flex items-center justify-between">
+                      <div>
+                        <span className="text-white font-medium">{expense.amount.toLocaleString('ru-RU')} ₽</span>
+                        {expense.comment && (
+                          <p className="text-gray-500 text-sm">{expense.comment}</p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => deleteTodayExpense(expense.id)}
+                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                <p className="text-blue-400 text-xs">
+                  💡 Внезапные расходы: вывод с кошелька, непредвиденные траты и т.д.
+                </p>
+              </div>
             </div>
           </div>
         </motion.div>

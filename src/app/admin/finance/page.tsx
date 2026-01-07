@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useOrders } from '@/hooks/useOrders';
 import { useCoins } from '@/hooks/useCoins';
-import { TrendingUp, TrendingDown, DollarSign, BarChart3, Calendar, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, Calendar, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -21,6 +21,19 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+
+interface DailyExpense {
+  id: string;
+  amount: number;
+  date: string;
+  comment: string;
+}
+
+interface SiteSettings {
+  buyCommission?: number;
+  sellCommission?: number;
+  dailyExpenses?: number;
+}
 
 // Helper functions
 function isToday(date: Date): boolean {
@@ -69,6 +82,46 @@ export default function FinancePage() {
   const { orders, loading: ordersLoading } = useOrders();
   const { coins } = useCoins();
   const [period, setPeriod] = useState<'week' | 'month'>('week');
+  const [settings, setSettings] = useState<SiteSettings>({});
+  const [todayExpenses, setTodayExpenses] = useState<DailyExpense[]>([]);
+
+  // Load settings and expenses
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('siteSettings');
+    if (savedSettings) {
+      try {
+        setSettings(JSON.parse(savedSettings));
+      } catch (e) {
+        console.error('Failed to parse settings');
+      }
+    }
+
+    const expensesData = localStorage.getItem('dailyExpenses');
+    if (expensesData) {
+      try {
+        const allExpenses: DailyExpense[] = JSON.parse(expensesData);
+        const today = new Date().toISOString().split('T')[0];
+        setTodayExpenses(allExpenses.filter(e => e.date === today));
+      } catch (e) {
+        console.error('Failed to parse expenses');
+      }
+    }
+  }, []);
+
+  // Get average commission rate
+  const avgCommission = useMemo(() => {
+    const buy = settings.buyCommission ?? 2;
+    const sell = settings.sellCommission ?? 2;
+    return (buy + sell) / 2 / 100; // Convert to decimal
+  }, [settings]);
+
+  // Get today's extra expenses
+  const todayExtraExpenses = useMemo(() => {
+    return todayExpenses.reduce((sum, e) => sum + e.amount, 0);
+  }, [todayExpenses]);
+
+  // Daily fixed expenses
+  const dailyFixedExpenses = settings.dailyExpenses ?? 0;
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -77,34 +130,56 @@ export default function FinancePage() {
     // Today's stats
     const todayOrders = completedOrders.filter(o => isToday(new Date(o.createdAt)));
     const todayTurnover = todayOrders.reduce((sum, o) => sum + o.amount, 0);
-    const todayProfit = todayOrders.reduce((sum, o) => {
-      // Profit = difference between what user paid and what we give
-      // Simplified: assume 2-5% margin
-      return sum + (o.amount * 0.03);
+    const todayGrossProfit = todayOrders.reduce((sum, o) => {
+      return sum + (o.amount * avgCommission);
     }, 0);
+    // Net profit = gross profit - daily expenses - today's extra expenses
+    const todayNetProfit = todayGrossProfit - dailyFixedExpenses - todayExtraExpenses;
 
     // This month's stats
     const monthOrders = completedOrders.filter(o => isThisMonth(new Date(o.createdAt)));
     const monthTurnover = monthOrders.reduce((sum, o) => sum + o.amount, 0);
-    const monthProfit = monthOrders.reduce((sum, o) => sum + (o.amount * 0.03), 0);
+    const monthGrossProfit = monthOrders.reduce((sum, o) => sum + (o.amount * avgCommission), 0);
+    // Calculate days in current month so far
+    const today = new Date();
+    const daysThisMonth = today.getDate();
+    const monthExpenses = dailyFixedExpenses * daysThisMonth;
+    // Get all expenses for this month
+    const expensesData = localStorage.getItem('dailyExpenses');
+    let monthExtraExpenses = 0;
+    if (expensesData) {
+      try {
+        const allExpenses: DailyExpense[] = JSON.parse(expensesData);
+        const thisMonth = today.toISOString().slice(0, 7); // YYYY-MM
+        monthExtraExpenses = allExpenses
+          .filter(e => e.date.startsWith(thisMonth))
+          .reduce((sum, e) => sum + e.amount, 0);
+      } catch (e) {}
+    }
+    const monthNetProfit = monthGrossProfit - monthExpenses - monthExtraExpenses;
 
     // All time stats
     const totalTurnover = completedOrders.reduce((sum, o) => sum + o.amount, 0);
-    const totalProfit = completedOrders.reduce((sum, o) => sum + (o.amount * 0.03), 0);
+    const totalGrossProfit = completedOrders.reduce((sum, o) => sum + (o.amount * avgCommission), 0);
     const totalOrders = completedOrders.length;
 
     return {
       todayTurnover,
-      todayProfit,
+      todayGrossProfit,
+      todayNetProfit,
       todayOrders: todayOrders.length,
       monthTurnover,
-      monthProfit,
+      monthGrossProfit,
+      monthNetProfit,
       monthOrders: monthOrders.length,
       totalTurnover,
-      totalProfit,
+      totalGrossProfit,
       totalOrders,
+      dailyFixedExpenses,
+      todayExtraExpenses,
+      commissionPercent: avgCommission * 100,
     };
-  }, [orders]);
+  }, [orders, avgCommission, dailyFixedExpenses, todayExtraExpenses]);
 
 
   // Chart data for last 7 days
@@ -126,7 +201,7 @@ export default function FinancePage() {
       });
       
       const turnover = dayOrders.reduce((sum, o) => sum + o.amount, 0);
-      const profit = dayOrders.reduce((sum, o) => sum + (o.amount * 0.03), 0);
+      const profit = dayOrders.reduce((sum, o) => sum + (o.amount * avgCommission), 0);
       
       return {
         name: day,
@@ -135,7 +210,7 @@ export default function FinancePage() {
         orders: dayOrders.length,
       };
     });
-  }, [orders]);
+  }, [orders, avgCommission]);
 
   // Chart data for last 30 days
   const monthlyChartData = useMemo(() => {
@@ -156,7 +231,7 @@ export default function FinancePage() {
       });
       
       const turnover = dayOrders.reduce((sum, o) => sum + o.amount, 0);
-      const profit = dayOrders.reduce((sum, o) => sum + (o.amount * 0.03), 0);
+      const profit = dayOrders.reduce((sum, o) => sum + (o.amount * avgCommission), 0);
       
       return {
         name: day,
@@ -165,7 +240,7 @@ export default function FinancePage() {
         orders: dayOrders.length,
       };
     });
-  }, [orders]);
+  }, [orders, avgCommission]);
 
   // Coin distribution data
   const coinDistribution = useMemo(() => {
@@ -254,9 +329,13 @@ export default function FinancePage() {
             </div>
             <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">Сегодня</span>
           </div>
-          <p className="text-gray-400 text-sm mb-1">Прибыль за сегодня</p>
-          <p className="text-2xl font-bold text-green-400">+{formatCurrency(stats.todayProfit)} ₽</p>
-          <p className="text-xs text-gray-500 mt-2">~3% от оборота</p>
+          <p className="text-gray-400 text-sm mb-1">Чистая прибыль</p>
+          <p className={`text-2xl font-bold ${stats.todayNetProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+            {stats.todayNetProfit >= 0 ? '+' : ''}{formatCurrency(stats.todayNetProfit)} ₽
+          </p>
+          <p className="text-xs text-gray-500 mt-2">
+            Валовая: +{formatCurrency(stats.todayGrossProfit)} ₽ ({stats.commissionPercent.toFixed(1)}%)
+          </p>
         </motion.div>
 
         {/* Month's Turnover */}
@@ -290,11 +369,43 @@ export default function FinancePage() {
             </div>
             <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">Месяц</span>
           </div>
-          <p className="text-gray-400 text-sm mb-1">Прибыль за месяц</p>
-          <p className="text-2xl font-bold text-orange-400">+{formatCurrency(stats.monthProfit)} ₽</p>
-          <p className="text-xs text-gray-500 mt-2">~3% от оборота</p>
+          <p className="text-gray-400 text-sm mb-1">Чистая прибыль</p>
+          <p className={`text-2xl font-bold ${stats.monthNetProfit >= 0 ? 'text-orange-400' : 'text-red-400'}`}>
+            {stats.monthNetProfit >= 0 ? '+' : ''}{formatCurrency(stats.monthNetProfit)} ₽
+          </p>
+          <p className="text-xs text-gray-500 mt-2">
+            Валовая: +{formatCurrency(stats.monthGrossProfit)} ₽
+          </p>
         </motion.div>
       </div>
+
+      {/* Expenses Info */}
+      {(stats.dailyFixedExpenses > 0 || stats.todayExtraExpenses > 0) && (
+        <motion.div
+          className="bg-dark-card rounded-xl p-4 border border-gray-800"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+        >
+          <div className="flex flex-wrap items-center gap-6 text-sm">
+            <div className="flex items-center gap-2">
+              <Minus className="w-4 h-4 text-red-400" />
+              <span className="text-gray-400">Ежедневные расходы:</span>
+              <span className="text-red-400 font-medium">{formatCurrency(stats.dailyFixedExpenses)} ₽</span>
+            </div>
+            {stats.todayExtraExpenses > 0 && (
+              <div className="flex items-center gap-2">
+                <Minus className="w-4 h-4 text-red-400" />
+                <span className="text-gray-400">Расходы за сегодня:</span>
+                <span className="text-red-400 font-medium">{formatCurrency(stats.todayExtraExpenses)} ₽</span>
+              </div>
+            )}
+            <div className="ml-auto text-gray-500 text-xs">
+              Настроить в разделе "Настройки"
+            </div>
+          </div>
+        </motion.div>
+      )}
 
 
       {/* Charts */}
@@ -525,8 +636,9 @@ export default function FinancePage() {
             <p className="text-3xl font-bold text-blue-400">{formatCurrency(stats.totalTurnover)} ₽</p>
           </div>
           <div className="text-center p-4 bg-gray-800/50 rounded-xl">
-            <p className="text-gray-400 text-sm mb-2">Общая прибыль</p>
-            <p className="text-3xl font-bold text-green-400">+{formatCurrency(stats.totalProfit)} ₽</p>
+            <p className="text-gray-400 text-sm mb-2">Валовая прибыль</p>
+            <p className="text-3xl font-bold text-green-400">+{formatCurrency(stats.totalGrossProfit)} ₽</p>
+            <p className="text-xs text-gray-500 mt-1">~{stats.commissionPercent.toFixed(1)}% от оборота</p>
           </div>
         </div>
       </motion.div>
