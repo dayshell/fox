@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Coin } from '@/types';
 
-// Markup percentage (your profit margin)
-const MARKUP_PERCENT = 5;
+// Markup percentage (your profit margin) - set to 0 since commission is already in rates
+const MARKUP_PERCENT = 0;
 
 // Apply markup to rates
 function applyMarkup(buyRate: number, sellRate: number) {
@@ -15,9 +15,12 @@ function applyMarkup(buyRate: number, sellRate: number) {
 }
 
 // Base rates (before markup) - Updated January 2026 from CoinGecko
+// buyRate = цена по которой клиент ПОКУПАЕТ у нас (мы продаём дороже) - выше рынка
+// sellRate = цена по которой клиент ПРОДАЁТ нам (мы покупаем дешевле) - ниже рынка
 const baseCoins = [
   // Active coins (shown on main page)
-  { id: 'btc', name: 'Bitcoin', symbol: 'BTC', network: 'Bitcoin', logoUrl: 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png', buyRate: 92000, sellRate: 91500, isActive: true, createdAt: new Date(), updatedAt: new Date() },
+  // BTC market price: $92,000 | buyRate: +2% = $93,840 | sellRate: -2% = $90,160
+  { id: 'btc', name: 'Bitcoin', symbol: 'BTC', network: 'Bitcoin', logoUrl: 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png', buyRate: 93840, sellRate: 90160, isActive: true, createdAt: new Date(), updatedAt: new Date() },
   { id: 'eth', name: 'Ethereum', symbol: 'ETH', network: 'ERC20', logoUrl: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png', buyRate: 3120, sellRate: 3100, isActive: true, createdAt: new Date(), updatedAt: new Date() },
   
   // USDT in different networks
@@ -86,9 +89,20 @@ const allCoins: Coin[] = baseCoins.map(coin => {
 });
 
 const COINS_KEY = 'foxswap_coins';
+const COINS_VERSION_KEY = 'foxswap_coins_version';
+const CURRENT_VERSION = '2026-01-13-v2'; // Update this when prices change
 
 function getStoredCoins(): Coin[] {
   if (typeof window === 'undefined') return allCoins;
+  
+  // Check version - if different, reset to new prices
+  const storedVersion = localStorage.getItem(COINS_VERSION_KEY);
+  if (storedVersion !== CURRENT_VERSION) {
+    localStorage.setItem(COINS_KEY, JSON.stringify(allCoins));
+    localStorage.setItem(COINS_VERSION_KEY, CURRENT_VERSION);
+    return allCoins;
+  }
+  
   const stored = localStorage.getItem(COINS_KEY);
   if (stored) {
     try {
