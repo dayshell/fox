@@ -33,10 +33,12 @@ const baseCoins = [
   { id: 'xrp', name: 'XRP', symbol: 'XRP', network: 'XRP Ledger', logoUrl: 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png', buyRate: 2.35, sellRate: 2.30, isActive: true, createdAt: new Date(), updatedAt: new Date() },
 
   // Fiat currencies (active)
-  // RUB market rate: 1 USD = 78.96 RUB (based on BTC 7,264,420 RUB / $92,000)
-  // buyRate: +2% = 0.01291 | sellRate: -2% = 0.01241
-  { id: 'rub-card', name: 'Рубль (Карта)', symbol: 'RUB', logoUrl: '', buyRate: 0.01291, sellRate: 0.01241, isActive: true, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'rub-sbp', name: 'Рубль (СБП)', symbol: 'RUB', logoUrl: '', buyRate: 0.01291, sellRate: 0.01241, isActive: true, createdAt: new Date(), updatedAt: new Date() },
+  // Target: 1 BTC = 7,119,131 RUB when client sells BTC (market 7,264,420 - 2%)
+  // Target: 1 BTC = 7,409,708 RUB when client buys BTC (market 7,264,420 + 2%)
+  // Formula: BTC.sellRate / RUB.buyRate = 7,119,131 => RUB.buyRate = 90160 / 7119131 = 0.012664
+  // Formula: BTC.buyRate / RUB.sellRate = 7,409,708 => RUB.sellRate = 93840 / 7409708 = 0.012664
+  { id: 'rub-card', name: 'Рубль (Карта)', symbol: 'RUB', logoUrl: '', buyRate: 0.012664, sellRate: 0.012664, isActive: true, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'rub-sbp', name: 'Рубль (СБП)', symbol: 'RUB', logoUrl: '', buyRate: 0.012664, sellRate: 0.012664, isActive: true, createdAt: new Date(), updatedAt: new Date() },
   { id: 'usd', name: 'Доллар США', symbol: 'USD', logoUrl: '', buyRate: 1.0, sellRate: 1.0, isActive: false, createdAt: new Date(), updatedAt: new Date() },
   { id: 'cny', name: 'Китайский юань', symbol: 'CNY', logoUrl: '', buyRate: 0.14, sellRate: 0.135, isActive: false, createdAt: new Date(), updatedAt: new Date() },
   { id: 'uzs', name: 'Узбекский сум', symbol: 'UZS', logoUrl: '', buyRate: 0.000078, sellRate: 0.000075, isActive: false, createdAt: new Date(), updatedAt: new Date() },
@@ -92,7 +94,7 @@ const allCoins: Coin[] = baseCoins.map(coin => {
 
 const COINS_KEY = 'foxswap_coins';
 const COINS_VERSION_KEY = 'foxswap_coins_version';
-const CURRENT_VERSION = '2026-01-13-v3'; // Update this when prices change
+const CURRENT_VERSION = '2026-01-13-v4'; // Update this when prices change
 
 function getStoredCoins(): Coin[] {
   if (typeof window === 'undefined') return allCoins;
