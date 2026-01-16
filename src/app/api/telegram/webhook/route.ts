@@ -4,6 +4,8 @@ export const dynamic = 'force-dynamic';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8268271231:AAFwYm06zfTf342aFd1p-dEZ39nXS5KW1nY';
 const WEB_APP_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://foxswap.netlify.app';
+// Banner image for welcome message
+const WELCOME_IMAGE_URL = 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800&q=80'; // Crypto/trading themed image
 
 interface TelegramUpdate {
   update_id: number;
@@ -45,6 +47,29 @@ async function sendMessage(chatId: number, text: string, replyMarkup?: object) {
   return response.json();
 }
 
+async function sendPhoto(chatId: number, photoUrl: string, caption: string, replyMarkup?: object) {
+  const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
+  
+  const body: any = {
+    chat_id: chatId,
+    photo: photoUrl,
+    caption,
+    parse_mode: 'HTML',
+  };
+  
+  if (replyMarkup) {
+    body.reply_markup = replyMarkup;
+  }
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  
+  return response.json();
+}
+
 export async function POST(request: NextRequest) {
   try {
     const update: TelegramUpdate = await request.json();
@@ -64,7 +89,7 @@ export async function POST(request: NextRequest) {
 ✅ Поддержка рублей (карта, СБП)
 ✅ Безопасные транзакции 24/7
 
-Нажмите кнопку ниже, чтобы начать обмен:`;
+Нажмите кнопку ниже, чтобы начать обмен 👇`;
 
         const inlineKeyboard = {
           inline_keyboard: [
@@ -89,7 +114,7 @@ export async function POST(request: NextRequest) {
           ]
         };
         
-        await sendMessage(chatId, welcomeMessage, inlineKeyboard);
+        await sendPhoto(chatId, WELCOME_IMAGE_URL, welcomeMessage, inlineKeyboard);
       } else if (text === '/help') {
         const helpMessage = `🦊 <b>FoxSwap — Помощь</b>
 
