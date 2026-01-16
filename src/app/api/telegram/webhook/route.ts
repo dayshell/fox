@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8268271231:AAFwYm06zfTf342aFd1p-dEZ39nXS5KW1nY';
-const WEB_APP_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://foxswap.netlify.app';
+const WEB_APP_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://foxswap.top';
 // Banner image for welcome message
 const WELCOME_IMAGE_URL = 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800&q=80'; // Crypto/trading themed image
 
