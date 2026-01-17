@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { FoxPaysOrderStatus, FoxPaysSubStatus } from '@/types/foxpays';
+import { FoxPaysOrderStatus, FoxPaysSubStatus, FoxPaysPaymentDetail } from '@/types/foxpays';
 
 interface OrderStatusData {
   orderId: string;
@@ -11,6 +11,7 @@ interface OrderStatusData {
   currency: string;
   paymentGateway: string;
   paymentGatewayName: string;
+  paymentDetail: FoxPaysPaymentDetail | null;
   expiresAt: number;
   finishedAt: number | null;
   createdAt: number;
@@ -31,6 +32,24 @@ interface UseFoxPaysOrderStatusReturn {
 
 const POLL_INTERVAL = 10000; // 10 seconds
 
+function getFoxPaysSettings() {
+  if (typeof window === 'undefined') return { apiUrl: '', accessToken: '' };
+  
+  try {
+    const saved = localStorage.getItem('siteSettings');
+    if (saved) {
+      const settings = JSON.parse(saved);
+      return {
+        apiUrl: settings.foxpaysApiUrl || '',
+        accessToken: settings.foxpaysAccessToken || '',
+      };
+    }
+  } catch (e) {
+    console.error('Failed to parse settings');
+  }
+  return { apiUrl: '', accessToken: '' };
+}
+
 export function useFoxPaysOrderStatus(
   orderId: string | null,
   enabled: boolean = true
@@ -49,7 +68,13 @@ export function useFoxPaysOrderStatus(
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/foxpays/order/${orderId}`);
+      const settings = getFoxPaysSettings();
+      const response = await fetch(`/api/foxpays/order/${orderId}`, {
+        headers: {
+          'X-FoxPays-URL': settings.apiUrl,
+          'X-FoxPays-Token': settings.accessToken,
+        },
+      });
       const data = await response.json();
 
       if (!data.success) {

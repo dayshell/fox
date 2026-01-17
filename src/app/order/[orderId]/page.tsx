@@ -18,7 +18,7 @@ import Image from 'next/image';
 export default function OrderStatusPage() {
   const params = useParams();
   const router = useRouter();
-  const orderId = params.orderId as string;
+  const orderId = (params?.orderId as string) || '';
   const { t } = useLanguage();
   
   const { status, loading, error, isExpired, isCompleted, isFailed, remainingTime } = 
@@ -95,8 +95,12 @@ export default function OrderStatusPage() {
     );
   }
 
+  // Use FoxPays API data as primary source, fallback to localStorage only for basic info
   const order = localOrder;
   const isPending = status?.status === 'pending' || (!status && order?.status === 'pending');
+  
+  // Use payment details from FoxPays API, NOT from localStorage
+  const paymentDetail = status?.paymentDetail;
 
   return (
     <div className="min-h-screen py-12">
@@ -153,8 +157,8 @@ export default function OrderStatusPage() {
         </motion.div>
 
 
-        {/* Payment Details - only show if pending */}
-        {isPending && order?.paymentDetail && (
+        {/* Payment Details - only show if pending and FoxPays returned payment details */}
+        {isPending && paymentDetail && (
           <motion.div
             className="card-dark p-6 mb-6"
             initial={{ opacity: 0, y: 20 }}
@@ -177,7 +181,7 @@ export default function OrderStatusPage() {
             </div>
 
             {/* Payment detail based on type */}
-            {order.paymentDetail.detailType === 'card' && (
+            {paymentDetail.detail_type === 'card' && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-gray-400 text-sm">
                   <CreditCard className="w-4 h-4" />
@@ -185,14 +189,14 @@ export default function OrderStatusPage() {
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-dark-input rounded-xl">
                   <code className="flex-1 text-white text-lg font-mono tracking-wider">
-                    {formatCardNumber(order.paymentDetail.detail)}
+                    {formatCardNumber(paymentDetail.detail)}
                   </code>
-                  <CopyButton text={order.paymentDetail.detail} size="md" />
+                  <CopyButton text={paymentDetail.detail} size="md" />
                 </div>
               </div>
             )}
 
-            {order.paymentDetail.detailType === 'phone' && (
+            {paymentDetail.detail_type === 'phone' && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-gray-400 text-sm">
                   <Smartphone className="w-4 h-4" />
@@ -200,14 +204,14 @@ export default function OrderStatusPage() {
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-dark-input rounded-xl">
                   <code className="flex-1 text-white text-lg font-mono">
-                    {order.paymentDetail.detail}
+                    {paymentDetail.detail}
                   </code>
-                  <CopyButton text={order.paymentDetail.detail} size="md" />
+                  <CopyButton text={paymentDetail.detail} size="md" />
                 </div>
               </div>
             )}
 
-            {order.paymentDetail.detailType === 'qrcode' && (
+            {paymentDetail.detail_type === 'qrcode' && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-gray-400 text-sm">
                   <QrCode className="w-4 h-4" />
@@ -215,9 +219,9 @@ export default function OrderStatusPage() {
                 </div>
                 <div className="flex justify-center">
                   <div className="p-4 bg-white rounded-xl">
-                    {order.paymentDetail.qrCodeUrl ? (
+                    {paymentDetail.qr_code_url ? (
                       <Image
-                        src={order.paymentDetail.qrCodeUrl}
+                        src={paymentDetail.qr_code_url}
                         alt="QR Code"
                         width={200}
                         height={200}
@@ -236,7 +240,7 @@ export default function OrderStatusPage() {
               </div>
             )}
 
-            {order.paymentDetail.detailType === 'account_number' && (
+            {paymentDetail.detail_type === 'account_number' && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-gray-400 text-sm">
                   <Building2 className="w-4 h-4" />
@@ -244,29 +248,29 @@ export default function OrderStatusPage() {
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-dark-input rounded-xl">
                   <code className="flex-1 text-white text-lg font-mono">
-                    {order.paymentDetail.detail}
+                    {paymentDetail.detail}
                   </code>
-                  <CopyButton text={order.paymentDetail.detail} size="md" />
+                  <CopyButton text={paymentDetail.detail} size="md" />
                 </div>
               </div>
             )}
 
             {/* Recipient */}
-            {order.paymentDetail.initials && (
+            {paymentDetail.initials && (
               <div className="mt-4 p-4 bg-dark-input rounded-xl">
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-400 text-sm">{t('foxpays.recipient')}:</span>
-                  <span className="text-white font-medium">{order.paymentDetail.initials}</span>
+                  <span className="text-white font-medium">{paymentDetail.initials}</span>
                 </div>
               </div>
             )}
 
             {/* Timer */}
-            {order.expiresAt && (
+            {status?.expiresAt && (
               <div className="mt-6">
                 <PaymentTimer
-                  expiresAt={order.expiresAt}
+                  expiresAt={status.expiresAt}
                   onExpire={() => window.location.reload()}
                 />
               </div>
