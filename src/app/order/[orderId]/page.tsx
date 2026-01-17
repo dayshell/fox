@@ -192,20 +192,41 @@ export default function OrderStatusPage() {
           </motion.div>
         )}
 
-        {isPending && status?.paymentDetail && status.paymentDetail.detail && (
+        {/* Payment Details - ALWAYS show if pending, even without paymentDetail */}
+        {isPending && (
           <motion.div
-            className="card-dark p-6 mb-6 border-4 border-green-500"
+            className="card-dark p-6 mb-6 border-4 border-blue-500"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <h3 className="text-lg font-semibold text-white mb-4 bg-red-500 p-2">
-              БЛОК РЕНДЕРИТСЯ! {t('foxpays.paymentDetails')}
+            <h3 className="text-lg font-semibold text-white mb-4 bg-blue-500 p-2">
+              ТЕСТ: Реквизиты для оплаты
             </h3>
 
-            {/* Amount to pay */}
+            {/* Show what we have */}
+            <div className="mb-6 p-6 bg-yellow-500 text-black rounded-xl">
+              <h4 className="font-bold text-2xl mb-4">DEBUG - Что есть:</h4>
+              <div className="space-y-2 text-lg">
+                <div><strong>isPending:</strong> {isPending ? 'YES' : 'NO'}</div>
+                <div><strong>status exists:</strong> {status ? 'YES' : 'NO'}</div>
+                <div><strong>paymentDetail exists:</strong> {status?.paymentDetail ? 'YES' : 'NO'}</div>
+                {status?.paymentDetail && (
+                  <>
+                    <div><strong>Detail:</strong> {status.paymentDetail.detail || 'EMPTY'}</div>
+                    <div><strong>Type:</strong> {status.paymentDetail.detail_type || 'EMPTY'}</div>
+                    <div><strong>Initials:</strong> {status.paymentDetail.initials || 'EMPTY'}</div>
+                  </>
+                )}
+                {!status?.paymentDetail && (
+                  <div className="text-red-600 font-bold">paymentDetail is NULL!</div>
+                )}
+              </div>
+            </div>
+
+            {/* Amount */}
             <div className="mb-6">
-              <div className="text-gray-400 text-sm mb-2">{t('foxpays.amountToPay')}</div>
+              <div className="text-gray-400 text-sm mb-2">Сумма к оплате</div>
               <div className="flex items-center gap-3 p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl">
                 <span className="text-2xl font-bold text-orange-400">
                   {formatAmount(order?.amount || status?.amount || 0)} {(order?.currency || status?.currency || 'RUB').toUpperCase()}
@@ -214,70 +235,21 @@ export default function OrderStatusPage() {
               </div>
             </div>
 
-            {/* SIMPLE TEST - just show the data */}
-            <div className="mb-6 p-6 bg-yellow-500 text-black rounded-xl">
-              <h4 className="font-bold text-2xl mb-4">ТЕСТ - Данные есть:</h4>
-              <div className="space-y-2 text-lg">
-                <div><strong>Detail:</strong> {status.paymentDetail.detail}</div>
-                <div><strong>Type:</strong> {status.paymentDetail.detail_type}</div>
-                <div><strong>Initials:</strong> {status.paymentDetail.initials}</div>
-              </div>
-            </div>
-
-            {/* Payment detail - показываем все данные */}
-            <div className="space-y-4 mb-6">
-              <div className="flex items-center gap-2 text-gray-400 text-sm mb-3">
-                <span className="font-semibold">Данные для оплаты</span>
-              </div>
-
-              {/* Main payment detail */}
-              <div className="p-4 bg-dark-input rounded-xl">
-                <div className="text-gray-400 text-xs mb-2">
-                  {status.paymentDetail.detail_type === 'card' && 'Номер карты'}
-                  {status.paymentDetail.detail_type === 'phone' && 'Номер телефона'}
-                  {status.paymentDetail.detail_type === 'account_number' && 'Номер счёта'}
-                  {status.paymentDetail.detail_type === 'qrcode' && 'QR-код'}
-                </div>
-                <div className="flex items-center gap-3">
-                  <code className="flex-1 text-white text-xl font-mono font-bold">
-                    {status.paymentDetail.detail}
-                  </code>
-                  <CopyButton text={status.paymentDetail.detail} size="md" />
-                </div>
-              </div>
-
-              {/* Recipient name */}
-              {status.paymentDetail.initials && (
-                <div className="p-4 bg-dark-input rounded-xl">
-                  <div className="text-gray-400 text-xs mb-2">Получатель</div>
-                  <div className="flex items-center gap-3">
-                    <User className="w-5 h-5 text-orange-400" />
-                    <span className="text-white text-lg font-semibold">{status.paymentDetail.initials}</span>
+            {/* Show payment details if they exist */}
+            {status?.paymentDetail?.detail && (
+              <div className="space-y-4 mb-6">
+                <div className="p-4 bg-green-500 text-white rounded-xl">
+                  <h4 className="font-bold text-xl mb-2">✓ Реквизиты получены!</h4>
+                  <div className="space-y-2">
+                    <div><strong>Номер:</strong> {status.paymentDetail.detail}</div>
+                    <div><strong>Тип:</strong> {status.paymentDetail.detail_type}</div>
+                    {status.paymentDetail.initials && (
+                      <div><strong>Получатель:</strong> {status.paymentDetail.initials}</div>
+                    )}
                   </div>
                 </div>
-              )}
-
-              {/* QR Code if available */}
-              {status.paymentDetail.qr_code_url && (
-                <div className="p-4 bg-white rounded-xl flex justify-center">
-                  <Image
-                    src={status.paymentDetail.qr_code_url}
-                    alt="QR Code"
-                    width={200}
-                    height={200}
-                    className="rounded-lg"
-                  />
-                </div>
-              )}
-
-              {/* Payment gateway name */}
-              {status.paymentGatewayName && (
-                <div className="p-4 bg-dark-input rounded-xl">
-                  <div className="text-gray-400 text-xs mb-2">Платежная система</div>
-                  <div className="text-white text-lg">{status.paymentGatewayName}</div>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Timer */}
             {status?.expiresAt && (
@@ -292,10 +264,7 @@ export default function OrderStatusPage() {
             {/* Warning */}
             <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
               <p className="text-yellow-500 text-sm">
-                ⚠️ {t('foxpays.exactAmountWarning', { 
-                  amount: formatAmount(order?.amount || status?.amount || 0), 
-                  currency: (order?.currency || status?.currency || 'RUB').toUpperCase() 
-                })}
+                ⚠️ Переводите точную сумму {formatAmount(order?.amount || status?.amount || 0)} {(order?.currency || status?.currency || 'RUB').toUpperCase()}
               </p>
             </div>
           </motion.div>
