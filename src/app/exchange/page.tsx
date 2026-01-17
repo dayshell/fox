@@ -130,11 +130,9 @@ function ExchangeContent() {
         
         // Check if FoxPays should be used for fiat payments
         const isFromFiat = !from.logoUrl;
-        if (isFromFiat && foxpaysConfigured && gateways.length > 0) {
-          const availableGateways = filterGatewaysByAmount(gateways, parseFloat(amt));
-          if (availableGateways.length > 0) {
-            setUseFoxPays(true);
-          }
+        // ALWAYS use FoxPays if it's configured and we're dealing with fiat
+        if (isFromFiat && foxpaysConfigured) {
+          setUseFoxPays(true);
         }
       }
       setIsInitialized(true);
