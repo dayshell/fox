@@ -111,20 +111,7 @@ export async function POST(request: NextRequest) {
 
     console.log('[FoxPays] Order created successfully:', foxpaysOrder.order_id);
 
-    // Check if payment_detail exists (may be null if waiting for details)
-    const paymentDetail = foxpaysOrder.payment_detail ? {
-      detail: foxpaysOrder.payment_detail.detail || '',
-      detailType: foxpaysOrder.payment_detail.detail_type || 'card',
-      initials: foxpaysOrder.payment_detail.initials || '',
-      qrCodeUrl: foxpaysOrder.payment_detail.qr_code_url || undefined,
-    } : {
-      detail: '',
-      detailType: 'card' as const,
-      initials: '',
-      qrCodeUrl: undefined,
-    };
-
-    // Prepare order data for storage
+    // Prepare order data for storage (WITHOUT payment details for security)
     const exchangeOrder: Omit<ExchangeOrder, 'id'> = {
       foxpaysOrderId: foxpaysOrder.order_id,
       externalId: foxpaysOrder.external_id,
@@ -133,7 +120,13 @@ export async function POST(request: NextRequest) {
       currency: foxpaysOrder.currency,
       paymentGateway: foxpaysOrder.payment_gateway,
       paymentGatewayName: foxpaysOrder.payment_gateway_name,
-      paymentDetail,
+      // DO NOT include paymentDetail - it will be fetched from FoxPays API when needed
+      paymentDetail: {
+        detail: '',
+        detailType: 'card' as const,
+        initials: '',
+        qrCodeUrl: undefined,
+      },
       status: foxpaysOrder.status,
       subStatus: foxpaysOrder.sub_status,
       coinId: coinId || '',
