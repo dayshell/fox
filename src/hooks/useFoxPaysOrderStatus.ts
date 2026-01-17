@@ -69,6 +69,9 @@ export function useFoxPaysOrderStatus(
       setError(null);
 
       const settings = getFoxPaysSettings();
+      console.log('[useFoxPaysOrderStatus] Fetching order:', orderId);
+      console.log('[useFoxPaysOrderStatus] Settings:', { apiUrl: settings.apiUrl, hasToken: !!settings.accessToken });
+      
       const response = await fetch(`/api/foxpays/order/${orderId}`, {
         headers: {
           'X-FoxPays-URL': settings.apiUrl,
@@ -77,12 +80,18 @@ export function useFoxPaysOrderStatus(
       });
       const data = await response.json();
 
+      console.log('[useFoxPaysOrderStatus] API Response:', data);
+
       if (!data.success) {
         throw new Error(data.error || 'Ошибка получения статуса');
       }
 
+      console.log('[useFoxPaysOrderStatus] Order Data:', data.data);
+      console.log('[useFoxPaysOrderStatus] Payment Detail:', data.data.paymentDetail);
+
       setStatus(data.data);
     } catch (err) {
+      console.error('[useFoxPaysOrderStatus] Error:', err);
       setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
     } finally {
       setLoading(false);

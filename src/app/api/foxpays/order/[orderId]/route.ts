@@ -34,6 +34,9 @@ export async function GET(
     const client = new FoxPaysClient(apiBaseUrl, accessToken);
     const order = await client.getH2HOrder(orderId);
 
+    console.log('[FoxPays Get Order] Raw order from API:', JSON.stringify(order, null, 2));
+    console.log('[FoxPays Get Order] Payment detail:', order.payment_detail);
+
     return NextResponse.json({
       success: true,
       data: {
