@@ -1,20 +1,18 @@
-// UPDATED VERSION 2.0 - FORCE RECOMPILE
+// Payment Details Display - Clean Version
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { useFoxPaysOrderStatus, formatRemainingTime } from '@/hooks/useFoxPaysOrderStatus';
+import { useFoxPaysOrderStatus } from '@/hooks/useFoxPaysOrderStatus';
 import { useFoxPaysOrder } from '@/hooks/useFoxPaysOrder';
 import { useLanguage } from '@/context/LanguageContext';
 import { CopyButton } from '@/components/CopyButton';
 import { PaymentTimer } from '@/components/PaymentTimer';
 import { 
-  CheckCircle, Clock, AlertCircle, ArrowLeft, 
-  CreditCard, Smartphone, QrCode, Building2, User, X
+  CheckCircle, Clock, AlertCircle, ArrowLeft, X
 } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
 
 export default function OrderStatusPage() {
   const params = useParams();
@@ -22,7 +20,7 @@ export default function OrderStatusPage() {
   const orderId = (params?.orderId as string) || '';
   const { t } = useLanguage();
   
-  const { status, loading, error, isExpired, isCompleted, isFailed, remainingTime } = 
+  const { status, loading, error, isExpired, isCompleted, isFailed } = 
     useFoxPaysOrderStatus(orderId, true);
   const { confirmPayment, cancelOrder, loading: actionLoading } = useFoxPaysOrder();
   
@@ -65,10 +63,6 @@ export default function OrderStatusPage() {
     }
   };
 
-  const formatCardNumber = (card: string): string => {
-    return card.replace(/(.{4})/g, '$1 ').trim();
-  };
-
   const formatAmount = (value: number | string): string => {
     const num = typeof value === 'string' ? parseFloat(value) : value;
     return new Intl.NumberFormat('ru-RU', {
@@ -107,22 +101,6 @@ export default function OrderStatusPage() {
   
   // Use payment details from FoxPays API, NOT from localStorage
   const paymentDetail = status?.paymentDetail;
-  
-  // Debug logging
-  useEffect(() => {
-    console.log('=== [Order Page] DEBUG START ===');
-    console.log('[Order Page] Status:', status);
-    console.log('[Order Page] Payment Detail:', paymentDetail);
-    console.log('[Order Page] Local Order:', localOrder);
-    console.log('[Order Page] isPending:', isPending);
-    console.log('[Order Page] Has paymentDetail:', !!paymentDetail);
-    if (paymentDetail) {
-      console.log('[Order Page] Payment Detail Type:', paymentDetail.detail_type);
-      console.log('[Order Page] Payment Detail Value:', paymentDetail.detail);
-      console.log('[Order Page] Payment Detail Initials:', paymentDetail.initials);
-    }
-    console.log('=== [Order Page] DEBUG END ===');
-  }, [status, paymentDetail, localOrder, isPending]);
 
   return (
     <div className="min-h-screen py-12">
@@ -179,7 +157,7 @@ export default function OrderStatusPage() {
         </motion.div>
 
 
-        {/* Payment Details - only show if pending and FoxPays returned payment details */}
+        {/* Payment Details - Loading state */}
         {isPending && !paymentDetail && (
           <motion.div
             className="card-dark p-6 mb-6 text-center"
@@ -192,37 +170,17 @@ export default function OrderStatusPage() {
           </motion.div>
         )}
 
-        {/* Payment Details - ALWAYS show if pending, even without paymentDetail */}
-        {isPending && (
+        {/* Payment Details - Show when available */}
+        {isPending && paymentDetail && (
           <motion.div
-            className="card-dark p-6 mb-6 border-4 border-blue-500"
+            className="card-dark p-6 mb-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <h3 className="text-lg font-semibold text-white mb-4 bg-blue-500 p-2">
-              ТЕСТ: Реквизиты для оплаты
+            <h3 className="text-lg font-semibold text-white mb-4">
+              Данные для оплаты
             </h3>
-
-            {/* Show what we have */}
-            <div className="mb-6 p-6 bg-yellow-500 text-black rounded-xl">
-              <h4 className="font-bold text-2xl mb-4">DEBUG - Что есть:</h4>
-              <div className="space-y-2 text-lg">
-                <div><strong>isPending:</strong> {isPending ? 'YES' : 'NO'}</div>
-                <div><strong>status exists:</strong> {status ? 'YES' : 'NO'}</div>
-                <div><strong>paymentDetail exists:</strong> {status?.paymentDetail ? 'YES' : 'NO'}</div>
-                {status?.paymentDetail && (
-                  <>
-                    <div><strong>Detail:</strong> {status.paymentDetail.detail || 'EMPTY'}</div>
-                    <div><strong>Type:</strong> {status.paymentDetail.detail_type || 'EMPTY'}</div>
-                    <div><strong>Initials:</strong> {status.paymentDetail.initials || 'EMPTY'}</div>
-                  </>
-                )}
-                {!status?.paymentDetail && (
-                  <div className="text-red-600 font-bold">paymentDetail is NULL!</div>
-                )}
-              </div>
-            </div>
 
             {/* Amount */}
             <div className="mb-6">
@@ -235,25 +193,55 @@ export default function OrderStatusPage() {
               </div>
             </div>
 
-            {/* Show payment details if they exist */}
-            {status?.paymentDetail?.detail && (
-              <div className="space-y-4 mb-6">
-                <div className="p-4 bg-green-500 text-white rounded-xl">
-                  <h4 className="font-bold text-xl mb-2">✓ Реквизиты получены!</h4>
-                  <div className="space-y-2">
-                    <div><strong>Номер:</strong> {status.paymentDetail.detail}</div>
-                    <div><strong>Тип:</strong> {status.paymentDetail.detail_type}</div>
-                    {status.paymentDetail.initials && (
-                      <div><strong>Получатель:</strong> {status.paymentDetail.initials}</div>
-                    )}
-                  </div>
+            {/* Payment Details */}
+            <div className="space-y-4 mb-6">
+              {/* Main payment detail (card/phone/account) */}
+              <div>
+                <div className="text-gray-400 text-sm mb-2">
+                  {paymentDetail.detail_type === 'card' && 'Номер карты'}
+                  {paymentDetail.detail_type === 'phone' && 'Номер телефона'}
+                  {paymentDetail.detail_type === 'account_number' && 'Номер счета'}
+                  {paymentDetail.detail_type === 'qrcode' && 'QR-код'}
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-dark-input rounded-xl">
+                  <span className="text-lg font-mono text-white flex-1">
+                    {paymentDetail.detail}
+                  </span>
+                  <CopyButton text={paymentDetail.detail} size="sm" />
                 </div>
               </div>
-            )}
+
+              {/* Recipient name */}
+              {paymentDetail.initials && (
+                <div>
+                  <div className="text-gray-400 text-sm mb-2">Получатель</div>
+                  <div className="flex items-center gap-3 p-4 bg-dark-input rounded-xl">
+                    <span className="text-lg text-white flex-1">
+                      {paymentDetail.initials}
+                    </span>
+                    <CopyButton text={paymentDetail.initials} size="sm" />
+                  </div>
+                </div>
+              )}
+
+              {/* QR Code if available */}
+              {paymentDetail.qr_code_url && (
+                <div>
+                  <div className="text-gray-400 text-sm mb-2">QR-код для оплаты</div>
+                  <div className="p-4 bg-dark-input rounded-xl flex justify-center">
+                    <img 
+                      src={paymentDetail.qr_code_url} 
+                      alt="QR код для оплаты"
+                      className="w-48 h-48"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Timer */}
             {status?.expiresAt && (
-              <div className="mt-6">
+              <div className="mb-6">
                 <PaymentTimer
                   expiresAt={status.expiresAt}
                   onExpire={() => window.location.reload()}
@@ -262,7 +250,7 @@ export default function OrderStatusPage() {
             )}
 
             {/* Warning */}
-            <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+            <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
               <p className="text-yellow-500 text-sm">
                 ⚠️ Переводите точную сумму {formatAmount(order?.amount || status?.amount || 0)} {(order?.currency || status?.currency || 'RUB').toUpperCase()}
               </p>
