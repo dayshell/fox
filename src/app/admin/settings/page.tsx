@@ -43,9 +43,12 @@ export default function AdminSettingsPage() {
 
   useEffect(() => {
     const saved = localStorage.getItem('siteSettings');
+    console.log('[Settings] Loading from localStorage:', saved);
     if (saved) {
       try {
         const settings = JSON.parse(saved);
+        console.log('[Settings] Parsed settings:', settings);
+        console.log('[Settings] foxpaysEnabled value:', settings.foxpaysEnabled, 'type:', typeof settings.foxpaysEnabled);
         setSiteName(settings.siteName || 'FoxSwap');
         setLogoUrl(settings.logoUrl || '');
         setMetaTitle(settings.metaTitle || 'FoxSwap - Обмен криптовалют');
@@ -53,12 +56,13 @@ export default function AdminSettingsPage() {
         setMetaKeywords(settings.metaKeywords || 'криптовалюта, обмен, биткоин, эфириум, USDT, обменник');
         setTelegramBotToken(settings.telegramBotToken || '');
         setTelegramChatId(settings.telegramChatId || '');
-        setTelegramEnabled(settings.telegramEnabled || false);
+        setTelegramEnabled(settings.telegramEnabled ?? false);
         // FoxPays
         setFoxpaysApiUrl(settings.foxpaysApiUrl || '');
         setFoxpaysAccessToken(settings.foxpaysAccessToken || '');
         setFoxpaysMerchantId(settings.foxpaysMerchantId || '');
-        setFoxpaysEnabled(settings.foxpaysEnabled || false);
+        setFoxpaysEnabled(settings.foxpaysEnabled ?? false);
+        console.log('[Settings] Set foxpaysEnabled to:', settings.foxpaysEnabled ?? false);
         // Commission and expenses
         setBuyCommission(settings.buyCommission ?? 2);
         setSellCommission(settings.sellCommission ?? 2);
@@ -90,7 +94,10 @@ export default function AdminSettingsPage() {
       foxpaysApiUrl, foxpaysAccessToken, foxpaysMerchantId, foxpaysEnabled,
       buyCommission, sellCommission, dailyExpenses
     };
+    console.log('[Settings] Saving to localStorage:', settings);
+    console.log('[Settings] foxpaysEnabled value before save:', foxpaysEnabled, 'type:', typeof foxpaysEnabled);
     localStorage.setItem('siteSettings', JSON.stringify(settings));
+    console.log('[Settings] Saved successfully');
     
     // Trigger re-render in other components
     window.dispatchEvent(new Event('storage'));
@@ -568,7 +575,11 @@ export default function AdminSettingsPage() {
 
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => setFoxpaysEnabled(!foxpaysEnabled)}
+                  onClick={() => {
+                    const newValue = !foxpaysEnabled;
+                    console.log('[Settings] Toggle clicked. Old value:', foxpaysEnabled, 'New value:', newValue);
+                    setFoxpaysEnabled(newValue);
+                  }}
                   className={`relative w-12 h-6 rounded-full transition-colors ${
                     foxpaysEnabled ? 'bg-orange-600' : 'bg-gray-700'
                   }`}

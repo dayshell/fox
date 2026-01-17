@@ -9,8 +9,9 @@ import { useOrders } from '@/hooks/useOrders';
 import { useCoins } from '@/hooks/useCoins';
 import LanguageSwitcher from './LanguageSwitcher';
 import { Menu, X, ArrowRight } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { migrateLocalStorage } from '@/lib/migrateLocalStorage';
 
 export default function Header() {
   const pathname = usePathname();
@@ -19,6 +20,11 @@ export default function Header() {
   const { orders } = useOrders();
   const { coins } = useCoins();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Run migration on mount
+  useEffect(() => {
+    migrateLocalStorage();
+  }, []);
 
   // Hide header on admin pages
   if (pathname?.startsWith('/admin')) {
