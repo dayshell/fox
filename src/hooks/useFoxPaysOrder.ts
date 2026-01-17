@@ -23,7 +23,7 @@ interface UseFoxPaysOrderReturn {
 }
 
 function getFoxPaysSettings() {
-  if (typeof window === 'undefined') return { apiUrl: '', accessToken: '' };
+  if (typeof window === 'undefined') return { apiUrl: '', accessToken: '', merchantId: '' };
   
   try {
     const saved = localStorage.getItem('siteSettings');
@@ -32,12 +32,13 @@ function getFoxPaysSettings() {
       return {
         apiUrl: settings.foxpaysApiUrl || '',
         accessToken: settings.foxpaysAccessToken || '',
+        merchantId: settings.foxpaysMerchantId || '',
       };
     }
   } catch (e) {
     console.error('Failed to parse settings');
   }
-  return { apiUrl: '', accessToken: '' };
+  return { apiUrl: '', accessToken: '', merchantId: '' };
 }
 
 export function useFoxPaysOrder(): UseFoxPaysOrderReturn {
@@ -50,6 +51,7 @@ export function useFoxPaysOrder(): UseFoxPaysOrderReturn {
       'Content-Type': 'application/json',
       'X-FoxPays-URL': settings.apiUrl,
       'X-FoxPays-Token': settings.accessToken,
+      'X-FoxPays-Merchant-ID': settings.merchantId,
     };
   }, []);
 

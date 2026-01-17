@@ -23,6 +23,7 @@ export default function AdminSettingsPage() {
   // FoxPays settings
   const [foxpaysApiUrl, setFoxpaysApiUrl] = useState('');
   const [foxpaysAccessToken, setFoxpaysAccessToken] = useState('');
+  const [foxpaysMerchantId, setFoxpaysMerchantId] = useState('');
   const [foxpaysEnabled, setFoxpaysEnabled] = useState(false);
   const [testingFoxpays, setTestingFoxpays] = useState(false);
   const [foxpaysTestResult, setFoxpaysTestResult] = useState<'success' | 'error' | null>(null);
@@ -56,6 +57,7 @@ export default function AdminSettingsPage() {
         // FoxPays
         setFoxpaysApiUrl(settings.foxpaysApiUrl || '');
         setFoxpaysAccessToken(settings.foxpaysAccessToken || '');
+        setFoxpaysMerchantId(settings.foxpaysMerchantId || '');
         setFoxpaysEnabled(settings.foxpaysEnabled || false);
         // Commission and expenses
         setBuyCommission(settings.buyCommission ?? 2);
@@ -85,7 +87,7 @@ export default function AdminSettingsPage() {
     const settings = { 
       siteName, logoUrl, metaTitle, metaDescription, metaKeywords,
       telegramBotToken, telegramChatId, telegramEnabled,
-      foxpaysApiUrl, foxpaysAccessToken, foxpaysEnabled,
+      foxpaysApiUrl, foxpaysAccessToken, foxpaysMerchantId, foxpaysEnabled,
       buyCommission, sellCommission, dailyExpenses
     };
     localStorage.setItem('siteSettings', JSON.stringify(settings));
@@ -152,8 +154,22 @@ export default function AdminSettingsPage() {
       });
       
       const data = await response.json();
-      setFoxpaysTestResult(data.success ? 'success' : 'error');
+      
+      if (data.success) {
+        // Also test payment gateways to ensure full access
+        const gwResponse = await fetch(`${foxpaysApiUrl}/api/payment-gateways`, {
+          headers: {
+            'Accept': 'application/json',
+            'Access-Token': foxpaysAccessToken,
+          },
+        });
+        const gwData = await gwResponse.json();
+        setFoxpaysTestResult(gwData.success ? 'success' : 'error');
+      } else {
+        setFoxpaysTestResult('error');
+      }
     } catch (error) {
+      console.error('FoxPays test error:', error);
       setFoxpaysTestResult('error');
     }
     
@@ -532,7 +548,21 @@ export default function AdminSettingsPage() {
                   placeholder="Ваш Access Token"
                 />
                 <p className="text-gray-600 text-xs mt-2">
-                  Токен доступа из личного кабинета FoxPays
+                  Токен доступа из раздела "Интеграция" в FoxPays
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Merchant ID (UUID)</label>
+                <input
+                  type="text"
+                  value={foxpaysMerchantId}
+                  onChange={(e) => setFoxpaysMerchantId(e.target.value)}
+                  className="w-full px-4 py-3 input-dark font-mono text-sm"
+                  placeholder="3db07a16-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                />
+                <p className="text-gray-600 text-xs mt-2">
+                  UUID мерчанта из настроек мерчанта в FoxPays
                 </p>
               </div>
 
@@ -555,20 +585,20 @@ export default function AdminSettingsPage() {
 
             <div className="space-y-4">
               <div className="p-4 bg-dark-input rounded-xl">
-                <h3 className="text-white font-medium mb-3">Что даёт FoxPays:</h3>
-                <ul className="space-y-2 text-gray-400 text-sm">
-                  <li>• Автоматическое получение реквизитов</li>
-                  <li>• Поддержка разных банков (Сбербанк, Тинькофф и др.)</li>
-                  <li>• QR-коды для оплаты</li>
-                  <li>• Автоматическое отслеживание платежей</li>
-                  <li>• Защита от мошенничества</li>
-                </ul>
+                <h3 className="text-white font-medium mb-3">Как настроить:</h3>
+                <ol className="space-y-2 text-gray-400 text-sm list-decimal list-inside">
+                  <li>Войдите в админку FoxPays</li>
+                  <li>Раздел "Интеграция" → скопируйте Access Token</li>
+                  <li>Раздел "Настройки мерчанта" → скопируйте Merchant ID</li>
+                  <li>Вставьте данные в поля выше</li>
+                  <li>Нажмите "Проверить подключение"</li>
+                </ol>
               </div>
 
               <div className="p-3 bg-orange-500/10 border border-orange-500/20 rounded-xl">
                 <p className="text-orange-400 text-xs flex items-center gap-2">
                   <AlertCircle className="w-4 h-4" />
-                  Получите Access Token в личном кабинете FoxPays
+                  Все 3 параметра обязательны для работы FoxPays
                 </p>
               </div>
 

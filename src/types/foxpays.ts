@@ -71,11 +71,14 @@ export interface FoxPaysH2HOrder {
 }
 
 export interface CreateFoxPaysOrderParams {
+  external_id: string;
   amount: number;
-  currency: string;
-  payment_gateway: string;
-  external_id?: string;
+  merchant_id: string;
+  payment_gateway?: string;
+  currency?: string;
+  payment_detail_type?: FoxPaysDetailType;
   callback_url?: string;
+  is_transgran?: '0' | '1';
 }
 
 export interface FoxPaysApiResponse<T> {
