@@ -104,12 +104,13 @@ export default function AdminCoinsPage() {
       >
         {/* Table Header */}
         <div className="grid grid-cols-12 gap-2 px-4 py-3 bg-dark-bg/50 border-b border-gray-800 text-xs text-gray-500 font-medium">
-          <div className="col-span-3">Монета</div>
+          <div className="col-span-2">Монета</div>
           <div className="col-span-1">Символ</div>
-          <div className="col-span-2">Сеть</div>
+          <div className="col-span-1">Сеть</div>
+          <div className="col-span-3">Кошелёк</div>
           <div className="col-span-1">Покупка</div>
           <div className="col-span-1">Продажа</div>
-          <div className="col-span-2">Статус</div>
+          <div className="col-span-1">Статус</div>
           <div className="col-span-2 text-right">Действия</div>
         </div>
 
@@ -134,7 +135,7 @@ export default function AdminCoinsPage() {
                 transition={{ delay: index * 0.02 }}
               >
                 {/* Coin */}
-                <div className="col-span-3 flex items-center gap-2">
+                <div className="col-span-2 flex items-center gap-2">
                   <div className="w-7 h-7 rounded-full bg-gray-800 flex items-center justify-center overflow-hidden flex-shrink-0">
                     {coin.logoUrl ? (
                       <Image src={coin.logoUrl} alt={coin.name} width={28} height={28} />
@@ -149,11 +150,22 @@ export default function AdminCoinsPage() {
                 <div className="col-span-1 text-gray-400 text-xs">{coin.symbol}</div>
                 
                 {/* Network */}
-                <div className="col-span-2">
+                <div className="col-span-1">
                   {coin.network ? (
                     <span className="px-1.5 py-0.5 bg-gray-800 rounded text-[10px] text-gray-300">{coin.network}</span>
                   ) : (
                     <span className="text-gray-600 text-xs">—</span>
+                  )}
+                </div>
+                
+                {/* Wallet Address */}
+                <div className="col-span-3">
+                  {coin.walletAddress ? (
+                    <span className="text-gray-400 text-xs font-mono truncate block" title={coin.walletAddress}>
+                      {coin.walletAddress}
+                    </span>
+                  ) : (
+                    <span className="text-gray-600 text-xs">Не указан</span>
                   )}
                 </div>
                 
@@ -164,7 +176,7 @@ export default function AdminCoinsPage() {
                 <div className="col-span-1 text-red-500 text-xs">${coin.sellRate}</div>
                 
                 {/* Status */}
-                <div className="col-span-2">
+                <div className="col-span-1">
                   <button
                     onClick={() => toggleActive(coin.id)}
                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${

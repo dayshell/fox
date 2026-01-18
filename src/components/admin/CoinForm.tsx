@@ -17,6 +17,7 @@ export default function CoinForm({ coin, onSave, onCancel }: CoinFormProps) {
     symbol: coin?.symbol || '',
     network: coin?.network || '',
     logoUrl: coin?.logoUrl || '',
+    walletAddress: coin?.walletAddress || '',
     buyRate: coin?.buyRate || 0,
     sellRate: coin?.sellRate || 0,
     isActive: coin?.isActive ?? true,
@@ -101,6 +102,18 @@ export default function CoinForm({ coin, onSave, onCancel }: CoinFormProps) {
               className="w-full px-4 py-3 input-dark"
               placeholder="https://..."
             />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Адрес кошелька</label>
+            <input
+              type="text"
+              value={formData.walletAddress}
+              onChange={(e) => setFormData({ ...formData, walletAddress: e.target.value })}
+              className="w-full px-4 py-3 input-dark font-mono text-sm"
+              placeholder="bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
+            />
+            <p className="text-xs text-gray-500 mt-1">Адрес для получения этой монеты</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

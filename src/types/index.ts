@@ -4,6 +4,7 @@ export interface Coin {
   symbol: string;
   logoUrl: string;
   network?: string; // e.g., 'TRC20', 'ERC20', 'BEP20'
+  walletAddress?: string; // Wallet address for receiving this coin
   buyRate: number;
   sellRate: number;
   isActive: boolean;
