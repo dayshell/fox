@@ -2,6 +2,10 @@
 export function migrateLocalStorage() {
   if (typeof window === 'undefined') return;
 
+  // Migration disabled - payment details should come from FoxPays API, not localStorage
+  console.log('[Migration] Migration disabled - using FoxPays API for payment details');
+  
+  /* DISABLED - This was clearing payment details incorrectly
   try {
     const ordersData = localStorage.getItem('foxpaysOrders');
     if (!ordersData) return;
@@ -24,4 +28,5 @@ export function migrateLocalStorage() {
   } catch (e) {
     console.error('[Migration] Failed to migrate localStorage:', e);
   }
+  */
 }

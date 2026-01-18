@@ -62,15 +62,20 @@ export function useFoxPaysOrderStatus(
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchStatus = useCallback(async () => {
-    if (!orderId) return;
+    if (!orderId) {
+      console.log('[useFoxPaysOrderStatus] No orderId provided');
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
 
       const settings = getFoxPaysSettings();
+      console.log('[useFoxPaysOrderStatus] ===== FETCH START =====');
       console.log('[useFoxPaysOrderStatus] Fetching order:', orderId);
       console.log('[useFoxPaysOrderStatus] Settings:', { apiUrl: settings.apiUrl, hasToken: !!settings.accessToken });
+      console.log('[useFoxPaysOrderStatus] Request URL:', `/api/foxpays/order/${orderId}`);
       
       const response = await fetch(`/api/foxpays/order/${orderId}`, {
         headers: {
@@ -88,6 +93,7 @@ export function useFoxPaysOrderStatus(
 
       console.log('[useFoxPaysOrderStatus] Order Data:', data.data);
       console.log('[useFoxPaysOrderStatus] Payment Detail:', data.data.paymentDetail);
+      console.log('[useFoxPaysOrderStatus] ===== FETCH END =====');
 
       setStatus(data.data);
     } catch (err) {
