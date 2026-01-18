@@ -63,28 +63,35 @@ export default function OrderStatusPage() {
   const handleConfirm = async () => {
     setIsConfirming(true);
     setConfirmError(null);
+    
+    // Store current sub_status before confirmation
+    const previousSubStatus = status?.subStatus;
+    
     const success = await confirmPayment(orderId);
     if (success) {
       // Poll for status updates with multiple attempts
       let attempts = 0;
-      const maxAttempts = 5;
+      const maxAttempts = 10; // Increased to 10 attempts (20 seconds total)
       const checkInterval = 2000; // 2 seconds
       
       const checkStatus = async () => {
         attempts++;
         await refetch();
         
-        // Check if status changed (will be handled by the hook's state update)
+        // Continue checking if status hasn't changed yet
         if (attempts < maxAttempts) {
           setTimeout(checkStatus, checkInterval);
         } else {
+          // After max attempts, show info message and keep polling in background
           setIsConfirming(false);
+          setConfirmError('Платеж принят! Ожидаем подтверждение от банка. Статус обновится автоматически.');
+          setTimeout(() => setConfirmError(null), 5000);
         }
       };
       
       setTimeout(checkStatus, 2000);
     } else {
-      setConfirmError('Платеж отправлен на проверку. Обновление статуса может занять несколько минут. Страница автоматически обновится.');
+      setConfirmError('Платеж отправлен на проверку. Обновление статуса может занять несколько минут.');
       // Auto-refresh after showing message
       setTimeout(() => {
         setIsConfirming(false);
