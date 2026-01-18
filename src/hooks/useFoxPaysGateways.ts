@@ -116,7 +116,7 @@ export function useFoxPaysGateways(): UseFoxPaysGatewaysReturn {
   };
 }
 
-// Helper function to filter gateways by amount
+// Helper function to filter gateways by amount and active status
 export function filterGatewaysByAmount(
   gateways: FoxPaysPaymentGateway[],
   amount: number
@@ -124,7 +124,8 @@ export function filterGatewaysByAmount(
   return gateways.filter(gateway => {
     const minLimit = parseFloat(gateway.min_limit);
     const maxLimit = parseFloat(gateway.max_limit);
-    return amount >= minLimit && amount <= maxLimit;
+    const isActive = gateway.is_active !== false; // Active by default if field is missing
+    return amount >= minLimit && amount <= maxLimit && isActive;
   });
 }
 

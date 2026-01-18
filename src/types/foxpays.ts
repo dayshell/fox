@@ -31,6 +31,7 @@ export interface FoxPaysPaymentGateway {
   max_limit: string;
   reservation_time: number;
   detail_types: FoxPaysDetailType[];
+  is_active?: boolean;
 }
 
 export interface FoxPaysPaymentDetail {

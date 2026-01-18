@@ -60,11 +60,12 @@ export function PaymentGatewaySelector({
   loading = false,
   className = '',
 }: PaymentGatewaySelectorProps) {
-  // Filter gateways by amount
+  // Filter gateways by amount and active status
   const availableGateways = gateways.filter(gateway => {
     const minLimit = parseFloat(gateway.min_limit);
     const maxLimit = parseFloat(gateway.max_limit);
-    return amount >= minLimit && amount <= maxLimit;
+    const isActive = gateway.is_active !== false; // Active by default if field is missing
+    return amount >= minLimit && amount <= maxLimit && isActive;
   });
 
   if (loading) {
