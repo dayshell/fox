@@ -45,34 +45,53 @@ export function useFoxPaysGateways(): UseFoxPaysGatewaysReturn {
       hasToken: !!settings.accessToken 
     });
     
-    if (!settings.enabled || !settings.apiUrl || !settings.accessToken) {
-      console.log('[FoxPays] Not configured or disabled');
+    // Check if FoxPays is explicitly disabled in localStorage
+    if (settings.enabled === false) {
+      console.log('[FoxPays] Explicitly disabled in settings');
       setIsConfigured(false);
       setGateways([]);
       setLoading(false);
       return;
     }
 
-    setIsConfigured(true);
+    // If settings are in localStorage, use them
+    const hasLocalSettings = settings.apiUrl && settings.accessToken;
+    if (hasLocalSettings) {
+      setIsConfigured(true);
+    }
 
     try {
       setLoading(true);
       setError(null);
 
       console.log('[FoxPays] Fetching gateways...');
+      
+      // Only include headers if settings are available from localStorage
+      const headers: HeadersInit = {};
+      if (settings.apiUrl && settings.accessToken) {
+        headers['X-FoxPays-URL'] = settings.apiUrl;
+        headers['X-FoxPays-Token'] = settings.accessToken;
+      }
+      
       const response = await fetch('/api/foxpays/gateways', {
-        headers: {
-          'X-FoxPays-URL': settings.apiUrl,
-          'X-FoxPays-Token': settings.accessToken,
-        },
+        headers,
       });
       const data = await response.json();
       console.log('[FoxPays] Response:', data);
 
       if (!data.success) {
+        // If not configured, don't show as error
+        if (data.error?.includes('не настроен')) {
+          console.log('[FoxPays] Not configured');
+          setIsConfigured(false);
+          setGateways([]);
+          setLoading(false);
+          return;
+        }
         throw new Error(data.error || 'Ошибка загрузки платежных методов');
       }
 
+      setIsConfigured(true);
       setGateways(data.data || []);
       console.log('[FoxPays] Gateways loaded:', data.data?.length || 0);
     } catch (err) {

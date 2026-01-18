@@ -39,14 +39,20 @@ function getFoxPaysSettings() {
     const saved = localStorage.getItem('siteSettings');
     if (saved) {
       const settings = JSON.parse(saved);
-      return {
-        apiUrl: settings.foxpaysApiUrl || '',
-        accessToken: settings.foxpaysAccessToken || '',
-      };
+      const apiUrl = settings.foxpaysApiUrl || '';
+      const accessToken = settings.foxpaysAccessToken || '';
+      
+      // Return localStorage settings if available
+      if (apiUrl && accessToken) {
+        return { apiUrl, accessToken };
+      }
     }
   } catch (e) {
     console.error('Failed to parse settings');
   }
+  
+  // Fallback: settings will be read from environment variables on the server
+  // Return empty strings to let the API route handle it
   return { apiUrl: '', accessToken: '' };
 }
 
@@ -77,11 +83,16 @@ export function useFoxPaysOrderStatus(
       console.log('[useFoxPaysOrderStatus] Settings:', { apiUrl: settings.apiUrl, hasToken: !!settings.accessToken });
       console.log('[useFoxPaysOrderStatus] Request URL:', `/api/foxpays/order/${orderId}`);
       
+      // Only include headers if settings are available from localStorage
+      // Otherwise, let the API route use environment variables
+      const headers: HeadersInit = {};
+      if (settings.apiUrl && settings.accessToken) {
+        headers['X-FoxPays-URL'] = settings.apiUrl;
+        headers['X-FoxPays-Token'] = settings.accessToken;
+      }
+      
       const response = await fetch(`/api/foxpays/order/${orderId}`, {
-        headers: {
-          'X-FoxPays-URL': settings.apiUrl,
-          'X-FoxPays-Token': settings.accessToken,
-        },
+        headers,
       });
       const data = await response.json();
 

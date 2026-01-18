@@ -88,12 +88,17 @@ export function useFoxPaysOrder(): UseFoxPaysOrderReturn {
       setError(null);
 
       const settings = getFoxPaysSettings();
+      
+      // Only include headers if settings are available from localStorage
+      const headers: HeadersInit = {};
+      if (settings.apiUrl && settings.accessToken) {
+        headers['X-FoxPays-URL'] = settings.apiUrl;
+        headers['X-FoxPays-Token'] = settings.accessToken;
+      }
+      
       const response = await fetch(`/api/foxpays/order/${orderId}/confirm`, {
         method: 'PATCH',
-        headers: {
-          'X-FoxPays-URL': settings.apiUrl,
-          'X-FoxPays-Token': settings.accessToken,
-        },
+        headers,
       });
 
       const data = await response.json();
@@ -118,12 +123,17 @@ export function useFoxPaysOrder(): UseFoxPaysOrderReturn {
       setError(null);
 
       const settings = getFoxPaysSettings();
+      
+      // Only include headers if settings are available from localStorage
+      const headers: HeadersInit = {};
+      if (settings.apiUrl && settings.accessToken) {
+        headers['X-FoxPays-URL'] = settings.apiUrl;
+        headers['X-FoxPays-Token'] = settings.accessToken;
+      }
+      
       const response = await fetch(`/api/foxpays/order/${orderId}/cancel`, {
         method: 'PATCH',
-        headers: {
-          'X-FoxPays-URL': settings.apiUrl,
-          'X-FoxPays-Token': settings.accessToken,
-        },
+        headers,
       });
 
       const data = await response.json();
