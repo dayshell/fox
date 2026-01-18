@@ -203,9 +203,13 @@ export default function Header() {
                   className="rounded-full"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">🦊</span>
-                </div>
+                <Image 
+                  src="/logo.jpg" 
+                  alt={settings.siteName} 
+                  width={40} 
+                  height={40} 
+                  className="rounded-full"
+                />
               )}
               <span className="text-xl font-bold text-white">{settings.siteName}</span>
             </Link>
@@ -227,6 +231,8 @@ export default function Header() {
             <div className="flex items-center gap-4">
               <LanguageSwitcher />
               
+              {/* Login and Register buttons hidden */}
+              {/* 
               <Link href="/login" className="hidden md:block">
                 <button className="px-4 py-2 text-gray-400 hover:text-white transition-colors">
                   {t('auth.login')}
@@ -238,6 +244,7 @@ export default function Header() {
                   {t('auth.register')}
                 </button>
               </Link>
+              */}
 
               {/* Mobile menu button */}
               <button
