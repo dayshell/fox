@@ -66,6 +66,7 @@ function ExchangeContent() {
 
   // Generate or restore order number
   useEffect(() => {
+    if (!searchParams) return;
     const existingOrder = searchParams.get('order');
     if (existingOrder) {
       setOrderNumber(existingOrder);
@@ -94,6 +95,7 @@ function ExchangeContent() {
 
   // Check for FoxPays order in localStorage
   useEffect(() => {
+    if (!searchParams) return;
     const foxpaysOrderId = searchParams.get('foxpays');
     if (foxpaysOrderId) {
       try {
@@ -111,7 +113,7 @@ function ExchangeContent() {
   }, [searchParams]);
 
   useEffect(() => {
-    if (currentOrder || foxpaysOrder) return;
+    if (currentOrder || foxpaysOrder || !searchParams) return;
     
     const fromId = searchParams.get('from');
     const toId = searchParams.get('to');
@@ -141,6 +143,8 @@ function ExchangeContent() {
 
   const isFiat = (coin: Coin | null) => coin && !coin.logoUrl;
 
+  // Use wallet address from coin data if available, otherwise fallback to payments table
+  const coinWallet = fromCoin?.walletAddress;
   const paymentWallet = payments.find(p => 
     p.type === 'crypto' && p.coinId === fromCoin?.id && p.isActive && p.walletAddress
   );
@@ -150,7 +154,7 @@ function ExchangeContent() {
   );
 
   const isFromCoinFiat = fromCoin ? !fromCoin.logoUrl : false;
-  const hasPaymentMethod = isFromCoinFiat ? (useFoxPays ? selectedGateway !== null : !!bankPayment) : !!paymentWallet;
+  const hasPaymentMethod = isFromCoinFiat ? (useFoxPays ? selectedGateway !== null : !!bankPayment) : !!(coinWallet || paymentWallet);
 
 
   const handleCopy = (text: string) => {
@@ -568,12 +572,12 @@ function ExchangeContent() {
                 </h3>
 
                 {/* Crypto payment */}
-                {!isFiat(fromCoin) && paymentWallet ? (
+                {!isFiat(fromCoin) && (coinWallet || paymentWallet) ? (
                   <div className="space-y-4">
                     <div className="flex justify-center">
                       <div className="p-4 bg-white rounded-xl">
                         <QRCodeSVG 
-                          value={paymentWallet.walletAddress || ''} 
+                          value={coinWallet || paymentWallet?.walletAddress || ''} 
                           size={180}
                           level="H"
                           includeMargin={false}
@@ -584,14 +588,14 @@ function ExchangeContent() {
                     
                     <div className="p-4 bg-dark-input rounded-xl">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-gray-400 text-sm">{t('exchange.network')}: {paymentWallet.network}</span>
+                        <span className="text-gray-400 text-sm">{t('exchange.network')}: {fromCoin?.network || paymentWallet?.network}</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <code className="flex-1 text-white text-sm break-all font-mono bg-dark-bg p-3 rounded-lg">
-                          {paymentWallet.walletAddress}
+                          {coinWallet || paymentWallet?.walletAddress}
                         </code>
                         <motion.button
-                          onClick={() => handleCopy(paymentWallet.walletAddress || '')}
+                          onClick={() => handleCopy(coinWallet || paymentWallet?.walletAddress || '')}
                           className="p-3 rounded-lg bg-orange-600 text-white"
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
@@ -603,7 +607,7 @@ function ExchangeContent() {
 
                     <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
                       <p className="text-yellow-500 text-sm">
-                        {t('exchange.warning', { symbol: fromCoin?.symbol || '', network: paymentWallet.network || '' })}
+                        {t('exchange.warning', { symbol: fromCoin?.symbol || '', network: fromCoin?.network || paymentWallet?.network || '' })}
                       </p>
                     </div>
                   </div>
