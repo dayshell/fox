@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8268271231:AAFwYm06zfTf342aFd1p-dEZ39nXS5KW1nY';
 const WEB_APP_URL = 'https://www.foxswap.top';
-const SUPPORT_URL = 'https://t.me/FoxProjectSeo';
+const SUPPORT_URL = 'https://t.me/FoxSwap_pomosh_bot';
 // Banner image for welcome message
 const WELCOME_IMAGE_URL = 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800&q=80'; // Crypto/trading themed image
 

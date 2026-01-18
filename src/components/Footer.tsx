@@ -93,13 +93,13 @@ export default function Footer() {
                 support@foxswap.top
               </div>
               <a 
-                href="https://t.me/foxswap_pomosh_bot" 
+                href="https://t.me/FoxSwap_pomosh_bot" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 hover:text-orange-400 transition-colors"
               >
                 <Send className="w-4 h-4 text-orange-400" />
-                @foxswap_pomosh_bot
+                @FoxSwap_pomosh_bot
               </a>
             </div>
           </motion.div>
