@@ -193,18 +193,12 @@ export default function Header() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2">
-              {settings.logoUrl ? (
-                <img 
-                  src={settings.logoUrl} 
-                  alt={settings.siteName} 
-                  style={{ width: '40px', height: '40px' }}
-                  className="rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">🦊</span>
-                </div>
-              )}
+              <img 
+                src={settings.logoUrl || '/logo.jpg'} 
+                alt={settings.siteName} 
+                style={{ width: '40px', height: '40px' }}
+                className="rounded-full object-cover"
+              />
               <span className="text-xl font-bold text-white">{settings.siteName}</span>
             </Link>
 
