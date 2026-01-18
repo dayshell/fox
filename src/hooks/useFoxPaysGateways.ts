@@ -92,8 +92,15 @@ export function useFoxPaysGateways(): UseFoxPaysGatewaysReturn {
       }
 
       setIsConfigured(true);
-      setGateways(data.data || []);
-      console.log('[FoxPays] Gateways loaded:', data.data?.length || 0);
+      
+      // Filter out disabled gateways from local settings
+      const disabledGateways = getDisabledGateways();
+      const filteredGateways = (data.data || []).filter(
+        (gateway: FoxPaysPaymentGateway) => !disabledGateways.includes(gateway.code)
+      );
+      
+      setGateways(filteredGateways);
+      console.log('[FoxPays] Gateways loaded:', filteredGateways.length, 'of', data.data?.length || 0);
     } catch (err) {
       console.error('[FoxPays] Error:', err);
       setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
@@ -116,6 +123,50 @@ export function useFoxPaysGateways(): UseFoxPaysGatewaysReturn {
   };
 }
 
+// Helper function to get disabled gateways from global settings
+function getDisabledGateways(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const saved = localStorage.getItem('siteSettings');
+    if (saved) {
+      const settings = JSON.parse(saved);
+      return settings.disabledFoxPaysGateways || [];
+    }
+  } catch {
+    return [];
+  }
+  return [];
+}
+
+// Helper function to set disabled gateways in global settings
+export function setDisabledGateways(gatewayCodes: string[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const saved = localStorage.getItem('siteSettings');
+    const settings = saved ? JSON.parse(saved) : {};
+    settings.disabledFoxPaysGateways = gatewayCodes;
+    localStorage.setItem('siteSettings', JSON.stringify(settings));
+  } catch (err) {
+    console.error('Failed to save disabled gateways:', err);
+  }
+}
+
+// Helper function to toggle gateway enabled/disabled
+export function toggleGatewayEnabled(gatewayCode: string): void {
+  const disabled = getDisabledGateways();
+  const index = disabled.indexOf(gatewayCode);
+  
+  if (index > -1) {
+    // Enable gateway (remove from disabled list)
+    disabled.splice(index, 1);
+  } else {
+    // Disable gateway (add to disabled list)
+    disabled.push(gatewayCode);
+  }
+  
+  setDisabledGateways(disabled);
+}
+
 // Helper function to filter gateways by amount and active status
 export function filterGatewaysByAmount(
   gateways: FoxPaysPaymentGateway[],
@@ -124,7 +175,8 @@ export function filterGatewaysByAmount(
   return gateways.filter(gateway => {
     const minLimit = parseFloat(gateway.min_limit);
     const maxLimit = parseFloat(gateway.max_limit);
-    const isActive = gateway.is_active !== false; // Active by default if field is missing
+    // Only show if is_active is explicitly true OR undefined (API doesn't provide field = active)
+    const isActive = gateway.is_active === undefined ? true : gateway.is_active === true;
     return amount >= minLimit && amount <= maxLimit && isActive;
   });
 }

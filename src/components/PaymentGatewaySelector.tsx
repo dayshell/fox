@@ -64,7 +64,9 @@ export function PaymentGatewaySelector({
   const availableGateways = gateways.filter(gateway => {
     const minLimit = parseFloat(gateway.min_limit);
     const maxLimit = parseFloat(gateway.max_limit);
-    const isActive = gateway.is_active !== false; // Active by default if field is missing
+    // Only show if is_active is explicitly true OR undefined (meaning API doesn't provide this field)
+    // If is_active is explicitly false, hide it
+    const isActive = gateway.is_active === undefined ? true : gateway.is_active === true;
     
     // Debug logging
     console.log(`[Gateway Filter] ${gateway.name}:`, {

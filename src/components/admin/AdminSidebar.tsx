@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Coins, CreditCard, MessageSquare, LayoutDashboard, LogOut, Settings, ShoppingCart, Volume2, VolumeX, Users, MessageCircle, PieChart } from 'lucide-react';
+import { Coins, CreditCard, MessageSquare, LayoutDashboard, LogOut, Settings, ShoppingCart, Volume2, VolumeX, Users, MessageCircle, PieChart, Wallet } from 'lucide-react';
 import { useNotificationSound } from '@/hooks/useNotificationSound';
 import { useAdmins } from '@/hooks/useAdmins';
 import { useChat } from '@/hooks/useChat';
@@ -22,6 +22,7 @@ export default function AdminSidebar() {
     { href: '/admin/finance', icon: PieChart, label: 'Учёт средств', roles: ['superadmin'] },
     { href: '/admin/chat', icon: MessageCircle, label: 'Чат', roles: ['superadmin', 'operator'], badge: totalUnread },
     { href: '/admin/coins', icon: Coins, label: 'Монеты', roles: ['superadmin'] },
+    { href: '/admin/gateways', icon: Wallet, label: 'Шлюзы', roles: ['superadmin'] },
     { href: '/admin/payments', icon: CreditCard, label: 'Реквизиты', roles: ['superadmin'] },
     { href: '/admin/reviews', icon: MessageSquare, label: 'Отзывы', roles: ['superadmin', 'operator'] },
     { href: '/admin/admins', icon: Users, label: 'Админы', roles: ['superadmin'] },
