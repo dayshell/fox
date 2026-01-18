@@ -12,7 +12,7 @@ interface UseFoxPaysGatewaysReturn {
 }
 
 function getFoxPaysSettings() {
-  if (typeof window === 'undefined') return { apiUrl: '', accessToken: '', enabled: false };
+  if (typeof window === 'undefined') return { apiUrl: '', accessToken: '', enabled: true };
   
   try {
     const saved = localStorage.getItem('siteSettings');
@@ -21,13 +21,13 @@ function getFoxPaysSettings() {
       return {
         apiUrl: settings.foxpaysApiUrl || '',
         accessToken: settings.foxpaysAccessToken || '',
-        enabled: settings.foxpaysEnabled || false,
+        enabled: settings.foxpaysEnabled !== false, // enabled by default unless explicitly disabled
       };
     }
   } catch (e) {
     console.error('Failed to parse settings');
   }
-  return { apiUrl: '', accessToken: '', enabled: false };
+  return { apiUrl: '', accessToken: '', enabled: true }; // enabled by default
 }
 
 export function useFoxPaysGateways(): UseFoxPaysGatewaysReturn {
