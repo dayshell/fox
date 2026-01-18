@@ -65,6 +65,19 @@ export function PaymentGatewaySelector({
     const minLimit = parseFloat(gateway.min_limit);
     const maxLimit = parseFloat(gateway.max_limit);
     const isActive = gateway.is_active !== false; // Active by default if field is missing
+    
+    // Debug logging
+    console.log(`[Gateway Filter] ${gateway.name}:`, {
+      code: gateway.code,
+      is_active: gateway.is_active,
+      isActive,
+      minLimit,
+      maxLimit,
+      amount,
+      withinLimits: amount >= minLimit && amount <= maxLimit,
+      willShow: amount >= minLimit && amount <= maxLimit && isActive
+    });
+    
     return amount >= minLimit && amount <= maxLimit && isActive;
   });
 

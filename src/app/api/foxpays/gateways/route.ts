@@ -49,6 +49,11 @@ export async function GET(request: NextRequest) {
     const client = new FoxPaysClient(apiBaseUrl, accessToken);
     const gateways = await client.getPaymentGateways();
 
+    console.log('[FoxPays Gateways] Received from API:', gateways.length, 'gateways');
+    gateways.forEach(g => {
+      console.log(`  - ${g.name} (${g.code}): is_active=${g.is_active}`);
+    });
+
     // Update cache
     gatewaysCache = {
       data: gateways,
