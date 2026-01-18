@@ -197,18 +197,13 @@ export default function Header() {
                 <img 
                   src={settings.logoUrl} 
                   alt={settings.siteName} 
-                  width={40} 
-                  height={40} 
+                  style={{ width: '40px', height: '40px' }}
                   className="rounded-full object-cover"
                 />
               ) : (
-                <img 
-                  src="/logo.jpg" 
-                  alt={settings.siteName} 
-                  width={40} 
-                  height={40} 
-                  className="rounded-full object-cover"
-                />
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center">
+                  <span className="text-white font-bold text-xl">🦊</span>
+                </div>
               )}
               <span className="text-xl font-bold text-white">{settings.siteName}</span>
             </Link>
