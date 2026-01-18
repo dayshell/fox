@@ -283,12 +283,6 @@ export default function OrderStatusPage() {
                   </span>
                   {paymentDetail.detail && <CopyButton text={paymentDetail.detail} size="sm" />}
                 </div>
-                {/* Debug info */}
-                <div className="mt-2 p-2 bg-gray-800 rounded text-xs text-gray-400">
-                  <div>detail_type: {paymentDetail.detail_type || 'undefined'}</div>
-                  <div>detail length: {paymentDetail.detail?.length || 0}</div>
-                  <div>detail value: {JSON.stringify(paymentDetail.detail)}</div>
-                </div>
               </div>
 
               {/* Recipient name */}
