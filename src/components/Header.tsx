@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useSettings } from '@/context/SettingsContext';
@@ -195,20 +194,20 @@ export default function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2">
               {settings.logoUrl ? (
-                <Image 
+                <img 
                   src={settings.logoUrl} 
                   alt={settings.siteName} 
                   width={40} 
                   height={40} 
-                  className="rounded-full"
+                  className="rounded-full object-cover"
                 />
               ) : (
-                <Image 
+                <img 
                   src="/logo.jpg" 
                   alt={settings.siteName} 
                   width={40} 
                   height={40} 
-                  className="rounded-full"
+                  className="rounded-full object-cover"
                 />
               )}
               <span className="text-xl font-bold text-white">{settings.siteName}</span>
