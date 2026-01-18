@@ -202,9 +202,8 @@ function ExchangeContent() {
         savedOrders.push(foxOrder);
         localStorage.setItem('foxpaysOrders', JSON.stringify(savedOrders));
         
-        setFoxpaysOrder(foxOrder);
-        setStep(2);
-        router.replace(`/exchange?foxpays=${foxOrder.foxpaysOrderId}`);
+        // Redirect to order page to show payment details
+        router.push(`/order/${foxOrder.foxpaysOrderId}`);
         
         // Send Telegram notification
         sendTelegramNotification(foxOrder);
